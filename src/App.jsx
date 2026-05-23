@@ -1,18 +1,22 @@
 import { useState, useRef, useEffect } from "react";
 
+// ─── UTILITY ────────────────────────────────────────────────────────────────
+
 const stripMarkdown = (text) => text
   .replace(/\*\*\*/g, "").replace(/\*\*/g, "").replace(/\*/g, "")
   .replace(/^#{1,6}\s+/gm, "").replace(/^---+$/gm, "").replace(/^___+$/gm, "")
   .replace(/`{1,3}/g, "").replace(/^>\s+/gm, "")
   .replace(/\n{3,}/g, "\n\n").trim();
 
+// ─── DATA ────────────────────────────────────────────────────────────────────
+
 const LANGUAGES = [
-  { code: "fr", name: "French",   nativeScript: "Français",   flag: "🇫🇷", voiceId: "cgSgspJ2msm6clMCkdW9", srLang: "fr-FR", dialect: "Standard (France)",         dialectNote: "Use standard French as spoken in France. Use words like courriel, week-end, smartphone." },
-  { code: "es", name: "Spanish",  nativeScript: "Español",    flag: "🇪🇸", voiceId: "EXAVITQu4vr4xnSDxMaL", srLang: "es-ES", dialect: "Castilian (Spain)",         dialectNote: "Use Castilian Spanish from Spain. Use vosotros, ordenador, coche, piso, móvil." },
-  { code: "sw", name: "Swahili",  nativeScript: "Kiswahili",  flag: "🇰🇪", voiceId: "pFZP5JQG7iQjIQuC4Bku", srLang: "sw-KE", dialect: "Standard (Kiswahili Sanifu)", dialectNote: "Use Standard Swahili (Kiswahili Sanifu), the official form used in East Africa." },
-  { code: "en", name: "English",  nativeScript: "English",    flag: "🇺🇸", voiceId: "21m00Tcm4TlvDq8ikWAM", srLang: "en-US", dialect: "American",                 dialectNote: "Use American English vocabulary and spelling. Use elevator, apartment, soccer, chips." },
-  { code: "ja", name: "Japanese", nativeScript: "日本語",      flag: "🇯🇵", voiceId: "AZnzlk1XvdvUeBnXmlld", srLang: "ja-JP", dialect: "Standard (Hyojungo)",       dialectNote: "Use standard Japanese (標準語/Hyojungo) as spoken in Tokyo and used in formal settings." },
-  { code: "zh", name: "Mandarin", nativeScript: "中文",        flag: "🇨🇳", voiceId: "onwK4e9ZLuTAKqWW03F9", srLang: "zh-CN", dialect: "Simplified",                dialectNote: "Use Simplified Chinese characters (简体中文) as used in Mainland China." },
+  { code: "fr", name: "French",   nativeScript: "Français",  flag: "🇫🇷", voiceId: "cgSgspJ2msm6clMCkdW9", srLang: "fr-FR", dialect: "Standard (France)",         dialectNote: "Use standard French as spoken in France. Use words like courriel, week-end, smartphone." },
+  { code: "es", name: "Spanish",  nativeScript: "Español",   flag: "🇪🇸", voiceId: "EXAVITQu4vr4xnSDxMaL", srLang: "es-ES", dialect: "Castilian (Spain)",         dialectNote: "Use Castilian Spanish from Spain. Use vosotros, ordenador, coche, piso, móvil." },
+  { code: "sw", name: "Swahili",  nativeScript: "Kiswahili", flag: "🇰🇪", voiceId: "pFZP5JQG7iQjIQuC4Bku", srLang: "sw-KE", dialect: "Standard (Kiswahili Sanifu)", dialectNote: "Use Standard Swahili (Kiswahili Sanifu), the official form used in East Africa." },
+  { code: "en", name: "English",  nativeScript: "English",   flag: "🇺🇸", voiceId: "21m00Tcm4TlvDq8ikWAM", srLang: "en-US", dialect: "American",                  dialectNote: "Use American English vocabulary and spelling. Use elevator, apartment, soccer, chips." },
+  { code: "ja", name: "Japanese", nativeScript: "日本語",     flag: "🇯🇵", voiceId: "AZnzlk1XvdvUeBnXmlld", srLang: "ja-JP", dialect: "Standard (Hyojungo)",       dialectNote: "Use standard Japanese (標準語/Hyojungo) as spoken in Tokyo and used in formal settings." },
+  { code: "zh", name: "Mandarin", nativeScript: "中文",       flag: "🇨🇳", voiceId: "onwK4e9ZLuTAKqWW03F9", srLang: "zh-CN", dialect: "Simplified",                dialectNote: "Use Simplified Chinese characters (简体中文) as used in Mainland China." },
 ];
 
 const LEVELS = ["Beginner", "Intermediate", "Advanced"];
@@ -94,24 +98,119 @@ const KEYBOARDS = {
   },
 };
 
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+
 const GEMINI_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 const ELEVEN_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY;
 
+// ─── KEYBOARD PANEL COMPONENT ────────────────────────────────────────────────
+
+function KeyboardPanel({ kb, langCode, lastTyped, onKeyClick }) {
+  const revKeyMap = kb.keyMap
+    ? Object.fromEntries(Object.entries(kb.keyMap).map(([k, v]) => [v, k.toUpperCase()]))
+    : {};
+
+  const isKeyActive = (key) => {
+    if (!lastTyped) return false;
+    const lt = lastTyped.toLowerCase();
+    if (kb.keyMap) return kb.keyMap[lt] === key || key === lastTyped;
+    return key.toLowerCase() === lt || key === lastTyped;
+  };
+
+  const renderKeyLabel = (key) => {
+    if (langCode === "ja") return (
+      <>
+        <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.2 }}>{revKeyMap[key] || ""}</span>
+        <span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", lineHeight: 1 }}>{key}</span>
+      </>
+    );
+    if (langCode === "zh" && kb.charHints?.[key]) return (
+      <>
+        <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.2 }}>{key}</span>
+        <span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", lineHeight: 1 }}>{kb.charHints[key]}</span>
+      </>
+    );
+    return key;
+  };
+
+  return (
+    <div style={styles.kbPanel}>
+      {kb.hint && <div style={styles.kbHint}>{kb.hint}</div>}
+
+      {kb.rows.map((row, ri) => (
+        <div key={ri} style={styles.kbRow}>
+          {row.map((key) => (
+            <button
+              key={key}
+              style={{ ...styles.kbKey, ...(isKeyActive(key) ? styles.kbKeyActive : {}) }}
+              onClick={() => onKeyClick(key.toLowerCase())}
+            >
+              {renderKeyLabel(key)}
+            </button>
+          ))}
+        </div>
+      ))}
+
+      {kb.specialGroups?.map((group) => (
+        <div key={group.label} style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 4 }}>
+          <span style={styles.kbGroupLabel}>{group.label}:</span>
+          {group.chars.map((key) => (
+            <button
+              key={key}
+              style={{ ...styles.kbKey, ...styles.kbKeySpecial, ...(isKeyActive(key) ? styles.kbKeyActive : {}) }}
+              onClick={() => onKeyClick(key)}
+            >
+              {key}
+            </button>
+          ))}
+        </div>
+      ))}
+
+      {kb.specials && kb.specials.length > 0 && (
+        <div style={{ ...styles.kbRow, flexWrap: "wrap", gap: 3, marginTop: 2 }}>
+          {kb.specials.map((key) => (
+            <button
+              key={key}
+              style={{ ...styles.kbKey, ...styles.kbKeySpecial, ...(isKeyActive(key) ? styles.kbKeyActive : {}) }}
+              onClick={() => onKeyClick(key)}
+            >
+              {key}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── APP COMPONENT ───────────────────────────────────────────────────────────
+
 export default function App() {
+
+  // --- Settings (persist across sessions) ---
   const [selectedLang, setSelectedLang] = useState(null);
-  const [level, setLevel] = useState("Beginner");
-  const [topic, setTopic] = useState(TOPICS[0]);
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [level,        setLevel]        = useState("Beginner");
+  const [topic,        setTopic]        = useState(TOPICS[0]);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const [autoCorrect, setAutoCorrect] = useState(true);
+  const [autoCorrect,  setAutoCorrect]  = useState(true);
+
+  // --- Session ---
+  const [started,     setStarted]     = useState(false);
+  const [messages,    setMessages]    = useState([]);
   const [corrections, setCorrections] = useState(0);
-  const [started, setStarted] = useState(false);
+  const [loading,     setLoading]     = useState(false);
+
+  // --- Input ---
+  const [input,       setInput]       = useState("");
   const [isListening, setIsListening] = useState(false);
+  const [lastTyped,   setLastTyped]   = useState("");
+
+  // --- Keyboard ---
   const [kbOpen, setKbOpen] = useState(false);
-  const [lastTyped, setLastTyped] = useState("");
+
   const bottomRef = useRef(null);
+
+  // ── Effects ───────────────────────────────────────────────
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -119,11 +218,12 @@ export default function App() {
 
   useEffect(() => {
     if (!input) { setLastTyped(""); return; }
-    const ch = input[input.length - 1];
-    setLastTyped(ch);
+    setLastTyped(input[input.length - 1]);
     const t = setTimeout(() => setLastTyped(""), 600);
     return () => clearTimeout(t);
   }, [input]);
+
+  // ── Voice input ───────────────────────────────────────────
 
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -133,18 +233,20 @@ export default function App() {
     recognition.lang = selectedLang?.srLang || "en-US";
     recognition.interimResults = false;
     recognition.onstart = () => setIsListening(true);
-    recognition.onend = () => setIsListening(false);
+    recognition.onend   = () => setIsListening(false);
     recognition.onresult = (e) => {
       const transcript = e.results[0][0].transcript.trim();
       if (!transcript || loading) return;
       setInput("");
-      const userMessage = { role: "user", content: transcript };
+      const userMessage    = { role: "user", content: transcript };
       const updatedMessages = [...messages, userMessage];
       setMessages(updatedMessages);
       sendToGemini(updatedMessages);
     };
     recognition.start();
   };
+
+  // ── System prompt ─────────────────────────────────────────
 
   const buildSystemPrompt = (lang, lvl) => `
 You are Lingua, an expert AI language tutor for ${lang.name}.
@@ -186,44 +288,47 @@ Do NOT include a pronunciation section unless the student explicitly asks for pr
 Start by greeting the student warmly in ${lang.name}.
 `;
 
+  // ── Session management ────────────────────────────────────
+
   const startSession = () => {
     if (!selectedLang) return;
     setStarted(true);
     setCorrections(0);
     setKbOpen(false);
-    const disclaimer = {
+    setMessages([{
       role: "system",
       content: `ℹ️ Voice recognition is set to ${selectedLang.nativeScript} (${selectedLang.name}). For best results, speak in ${selectedLang.name}.\n\nNo ${selectedLang.name} keyboard? No problem — you can type the pronunciation in English letters (e.g. "ni hao", "bonjour", "hola") and the AI will understand you.`,
-    };
-    setMessages([disclaimer]);
+    }]);
     sendToGemini([], true);
   };
+
+  // ── Gemini API ────────────────────────────────────────────
 
   const sendToGemini = async (history, isGreeting = false) => {
     setLoading(true);
     try {
-      const systemPrompt = buildSystemPrompt(selectedLang, level);
+      const systemPrompt   = buildSystemPrompt(selectedLang, level);
       const geminiMessages = isGreeting
         ? [{ role: "user", parts: [{ text: "Please greet me and start our conversation." }] }]
         : history
             .filter((m) => m.role !== "system")
             .map((m) => ({
-              role: m.role === "user" ? "user" : "model",
+              role:  m.role === "user" ? "user" : "model",
               parts: [{ text: m.content }],
             }));
 
-      const res = await fetch(
+      const res  = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
         {
-          method: "POST",
+          method:  "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+          body:    JSON.stringify({
             system_instruction: { parts: [{ text: systemPrompt }] },
             contents: geminiMessages,
           }),
         }
       );
-      const data = await res.json();
+      const data  = await res.json();
       if (!res.ok) throw new Error(data.error?.message || `API error ${res.status}`);
       const reply = stripMarkdown(data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't respond.");
 
@@ -243,6 +348,8 @@ Start by greeting the student warmly in ${lang.name}.
     setLoading(false);
   };
 
+  // ── ElevenLabs TTS ────────────────────────────────────────
+
   const speakWithElevenLabs = async (text, voiceId) => {
     if (!ELEVEN_KEY) {
       setVoiceEnabled(false);
@@ -256,15 +363,13 @@ Start by greeting the student warmly in ${lang.name}.
         .split("💬 Try saying:")[0]
         .trim();
       if (!cleanText) return;
+
       const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "xi-api-key": ELEVEN_KEY,
-        },
-        body: JSON.stringify({
+        method:  "POST",
+        headers: { "Content-Type": "application/json", "xi-api-key": ELEVEN_KEY },
+        body:    JSON.stringify({
           text: cleanText,
-          model_id: "eleven_multilingual_v2",
+          model_id:       "eleven_multilingual_v2",
           voice_settings: { stability: 0.5, similarity_boost: 0.75 },
         }),
       });
@@ -272,8 +377,7 @@ Start by greeting the student warmly in ${lang.name}.
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.detail?.message || `ElevenLabs error ${res.status}`);
       }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
+      const url   = URL.createObjectURL(await res.blob());
       const audio = new Audio(url);
       audio.onended = () => URL.revokeObjectURL(url);
       audio.play();
@@ -284,9 +388,11 @@ Start by greeting the student warmly in ${lang.name}.
     }
   };
 
+  // ── Message input handlers ────────────────────────────────
+
   const handleSend = async () => {
     if (!input.trim() || loading) return;
-    const userMessage = { role: "user", content: input.trim() };
+    const userMessage     = { role: "user", content: input.trim() };
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
     setInput("");
@@ -294,11 +400,10 @@ Start by greeting the student warmly in ${lang.name}.
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
+
+  // ── Landing page ──────────────────────────────────────────
 
   if (!started) {
     return (
@@ -384,20 +489,15 @@ Start by greeting the student warmly in ${lang.name}.
     );
   }
 
+  // ── Chat page ─────────────────────────────────────────────
+
   const kb = KEYBOARDS[selectedLang.code] || null;
-  const revKeyMap = kb?.keyMap
-    ? Object.fromEntries(Object.entries(kb.keyMap).map(([k, v]) => [v, k.toUpperCase()]))
-    : {};
-  const isKeyActive = (key) => {
-    if (!lastTyped || !kb) return false;
-    const lt = lastTyped.toLowerCase();
-    if (kb.keyMap) return kb.keyMap[lt] === key || key === lastTyped;
-    return key.toLowerCase() === lt || key === lastTyped;
-  };
 
   return (
     <div style={styles.page}>
       <div style={styles.chatWrapper}>
+
+        {/* Header */}
         <div style={styles.header}>
           <button style={styles.backBtn} onClick={() => setStarted(false)}>← Back</button>
           <div style={styles.headerCenter}>
@@ -411,6 +511,7 @@ Start by greeting the student warmly in ${lang.name}.
           </div>
         </div>
 
+        {/* Message list */}
         <div style={styles.messages}>
           {messages.map((msg, i) => (
             msg.role === "system"
@@ -429,70 +530,26 @@ Start by greeting the student warmly in ${lang.name}.
           <div ref={bottomRef} />
         </div>
 
+        {/* Keyboard toggle */}
         {kb && (
           <div style={styles.kbToggleBar}>
-            <button style={styles.kbToggleBtn} onClick={() => setKbOpen(o => !o)}>
+            <button style={styles.kbToggleBtn} onClick={() => setKbOpen((o) => !o)}>
               ⌨️ {kb.label} {kbOpen ? "▲" : "▼"}
             </button>
           </div>
         )}
 
+        {/* Keyboard panel */}
         {kbOpen && kb && (
-          <div style={styles.kbPanel}>
-            {kb.hint && <div style={styles.kbHint}>{kb.hint}</div>}
-            {kb.rows.map((row, ri) => (
-              <div key={ri} style={styles.kbRow}>
-                {row.map((key) => (
-                  <button
-                    key={key}
-                    style={{ ...styles.kbKey, ...(isKeyActive(key) ? styles.kbKeyActive : {}) }}
-                    onClick={() => setInput(prev => prev + key.toLowerCase())}
-                  >
-                    {selectedLang.code === "ja" ? (
-                      <>
-                        <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.2 }}>{revKeyMap[key] || ""}</span>
-                        <span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", lineHeight: 1 }}>{key}</span>
-                      </>
-                    ) : selectedLang.code === "zh" && kb.charHints?.[key] ? (
-                      <>
-                        <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.2 }}>{key}</span>
-                        <span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", lineHeight: 1 }}>{kb.charHints[key]}</span>
-                      </>
-                    ) : key}
-                  </button>
-                ))}
-              </div>
-            ))}
-            {kb.specialGroups?.map((group) => (
-              <div key={group.label} style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 4 }}>
-                <span style={styles.kbGroupLabel}>{group.label}:</span>
-                {group.chars.map((key) => (
-                  <button
-                    key={key}
-                    style={{ ...styles.kbKey, ...styles.kbKeySpecial, ...(isKeyActive(key) ? styles.kbKeyActive : {}) }}
-                    onClick={() => setInput(prev => prev + key)}
-                  >
-                    {key}
-                  </button>
-                ))}
-              </div>
-            ))}
-            {kb.specials && kb.specials.length > 0 && (
-              <div style={{ ...styles.kbRow, flexWrap: "wrap", gap: 3, marginTop: 2 }}>
-                {kb.specials.map((key) => (
-                  <button
-                    key={key}
-                    style={{ ...styles.kbKey, ...styles.kbKeySpecial, ...(isKeyActive(key) ? styles.kbKeyActive : {}) }}
-                    onClick={() => setInput(prev => prev + key)}
-                  >
-                    {key}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <KeyboardPanel
+            kb={kb}
+            langCode={selectedLang.code}
+            lastTyped={lastTyped}
+            onKeyClick={(char) => setInput((prev) => prev + char)}
+          />
         )}
 
+        {/* Input row */}
         <div style={styles.inputRow}>
           <textarea
             style={styles.input}
@@ -514,184 +571,85 @@ Start by greeting the student warmly in ${lang.name}.
             {loading ? "..." : "Send"}
           </button>
         </div>
+
       </div>
     </div>
   );
 }
 
+// ─── STYLES ──────────────────────────────────────────────────────────────────
+
 const styles = {
+
+  // ── Shared ────────────────────────────────────────────────
   page: {
     minHeight: "100vh",
     background: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: "'Segoe UI', sans-serif",
-    color: "#fff",
-    padding: 16,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    fontFamily: "'Segoe UI', sans-serif", color: "#fff", padding: 16,
   },
+
+  // ── Landing page ──────────────────────────────────────────
   landing: {
-    background: "rgba(255,255,255,0.07)",
-    backdropFilter: "blur(20px)",
-    borderRadius: 24,
-    padding: "40px 36px",
-    width: "100%",
-    maxWidth: 520,
-    boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-    border: "1px solid rgba(255,255,255,0.12)",
+    background: "rgba(255,255,255,0.07)", backdropFilter: "blur(20px)",
+    borderRadius: 24, padding: "40px 36px", width: "100%", maxWidth: 520,
+    boxShadow: "0 8px 32px rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.12)",
   },
-  logo: { fontSize: 36, fontWeight: 800, textAlign: "center", marginBottom: 8, letterSpacing: -1 },
+  logo:    { fontSize: 36, fontWeight: 800, textAlign: "center", marginBottom: 8, letterSpacing: -1 },
   tagline: { textAlign: "center", color: "rgba(255,255,255,0.6)", marginBottom: 32, fontSize: 14 },
   section: { marginBottom: 24 },
-  label: { display: "block", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.5, color: "rgba(255,255,255,0.5)", marginBottom: 12 },
-  langGrid: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 },
-  langBtn: {
-    display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-    padding: "14px 8px", borderRadius: 14, border: "2px solid rgba(255,255,255,0.1)",
-    background: "rgba(255,255,255,0.05)", cursor: "pointer", color: "#fff",
-    transition: "all 0.2s",
-  },
-  langBtnActive: { border: "2px solid #7c6af7", background: "rgba(124,106,247,0.25)", boxShadow: "0 0 16px rgba(124,106,247,0.4)" },
-  levelRow: { display: "flex", gap: 10 },
-  levelBtn: {
-    flex: 1, padding: "10px 0", borderRadius: 10, border: "2px solid rgba(255,255,255,0.1)",
-    background: "rgba(255,255,255,0.05)", color: "#fff", cursor: "pointer", fontWeight: 600, fontSize: 14,
-  },
-  levelBtnActive: { border: "2px solid #7c6af7", background: "rgba(124,106,247,0.25)" },
-  topicGrid: { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 },
-  topicBtn: {
-    display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4,
-    padding: "12px 14px", borderRadius: 14, border: "2px solid rgba(255,255,255,0.1)",
-    background: "rgba(255,255,255,0.05)", cursor: "pointer", color: "#fff",
-    textAlign: "left", transition: "all 0.2s",
-  },
+  label:   { display: "block", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.5, color: "rgba(255,255,255,0.5)", marginBottom: 12 },
+
+  langGrid:     { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 },
+  langBtn:      { display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 8px", borderRadius: 14, border: "2px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", cursor: "pointer", color: "#fff", transition: "all 0.2s" },
+  langBtnActive:{ border: "2px solid #7c6af7", background: "rgba(124,106,247,0.25)", boxShadow: "0 0 16px rgba(124,106,247,0.4)" },
+
+  levelRow:      { display: "flex", gap: 10 },
+  levelBtn:      { flex: 1, padding: "10px 0", borderRadius: 10, border: "2px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "#fff", cursor: "pointer", fontWeight: 600, fontSize: 14 },
+  levelBtnActive:{ border: "2px solid #7c6af7", background: "rgba(124,106,247,0.25)" },
+
+  topicGrid:      { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 },
+  topicBtn:       { display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4, padding: "12px 14px", borderRadius: 14, border: "2px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", cursor: "pointer", color: "#fff", textAlign: "left", transition: "all 0.2s" },
   topicBtnActive: { border: "2px solid #7c6af7", background: "rgba(124,106,247,0.25)", boxShadow: "0 0 16px rgba(124,106,247,0.4)" },
-  topicBadge: { fontSize: 11, padding: "3px 8px", borderRadius: 20, background: "rgba(167,139,250,0.3)", fontWeight: 600 },
-  toggleRow: { display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 },
-  toggleLabel: { display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "rgba(255,255,255,0.7)", cursor: "pointer" },
-  landingDisclaimer: {
-    fontSize: 12, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.05)",
-    border: "1px dashed rgba(255,255,255,0.15)", borderRadius: 10, padding: "10px 14px",
-    marginBottom: 16, lineHeight: 1.6, textAlign: "center",
-  },
-  startBtn: {
-    width: "100%", padding: "16px 0", borderRadius: 14, border: "none",
-    background: "linear-gradient(135deg, #7c6af7, #a78bfa)", color: "#fff",
-    fontWeight: 700, fontSize: 16, cursor: "pointer", letterSpacing: 0.5,
-    boxShadow: "0 4px 20px rgba(124,106,247,0.5)",
-  },
-  startBtnDisabled: { opacity: 0.4, cursor: "not-allowed" },
-  chatWrapper: {
-    display: "flex", flexDirection: "column", width: "100%", maxWidth: 680,
-    height: "90vh", background: "rgba(255,255,255,0.07)", backdropFilter: "blur(20px)",
-    borderRadius: 24, border: "1px solid rgba(255,255,255,0.12)", overflow: "hidden",
-  },
-  header: {
-    display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.1)",
-    background: "rgba(0,0,0,0.2)",
-  },
-  backBtn: { background: "none", border: "none", color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: 14 },
-  headerCenter: { display: "flex", alignItems: "center", gap: 8 },
-  levelBadge: { fontSize: 11, padding: "3px 8px", borderRadius: 20, background: "rgba(124,106,247,0.4)", fontWeight: 600 },
-  stats: { fontSize: 13, color: "rgba(255,255,255,0.5)" },
-  messages: { flex: 1, overflowY: "auto", padding: "20px 16px", display: "flex", flexDirection: "column", gap: 14 },
+
+  toggleRow:    { display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 },
+  toggleLabel:  { display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "rgba(255,255,255,0.7)", cursor: "pointer" },
+  landingDisclaimer: { fontSize: 12, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.05)", border: "1px dashed rgba(255,255,255,0.15)", borderRadius: 10, padding: "10px 14px", marginBottom: 16, lineHeight: 1.6, textAlign: "center" },
+
+  startBtn:        { width: "100%", padding: "16px 0", borderRadius: 14, border: "none", background: "linear-gradient(135deg, #7c6af7, #a78bfa)", color: "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer", letterSpacing: 0.5, boxShadow: "0 4px 20px rgba(124,106,247,0.5)" },
+  startBtnDisabled:{ opacity: 0.4, cursor: "not-allowed" },
+
+  // ── Chat: layout & header ─────────────────────────────────
+  chatWrapper: { display: "flex", flexDirection: "column", width: "100%", maxWidth: 680, height: "90vh", background: "rgba(255,255,255,0.07)", backdropFilter: "blur(20px)", borderRadius: 24, border: "1px solid rgba(255,255,255,0.12)", overflow: "hidden" },
+  header:      { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.1)", background: "rgba(0,0,0,0.2)" },
+  backBtn:     { background: "none", border: "none", color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: 14 },
+  headerCenter:{ display: "flex", alignItems: "center", gap: 8 },
+  levelBadge:  { fontSize: 11, padding: "3px 8px", borderRadius: 20, background: "rgba(124,106,247,0.4)", fontWeight: 600 },
+  topicBadge:  { fontSize: 11, padding: "3px 8px", borderRadius: 20, background: "rgba(167,139,250,0.3)", fontWeight: 600 },
+  stats:       { fontSize: 13, color: "rgba(255,255,255,0.5)" },
+
+  // ── Chat: messages ────────────────────────────────────────
+  messages:  { flex: 1, overflowY: "auto", padding: "20px 16px", display: "flex", flexDirection: "column", gap: 14 },
   systemMsg: { alignSelf: "center", textAlign: "center", fontSize: 12, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.05)", border: "1px dashed rgba(255,255,255,0.15)", borderRadius: 12, padding: "10px 16px", maxWidth: "90%", whiteSpace: "pre-wrap", lineHeight: 1.6 },
-  bubble: { maxWidth: "80%", padding: "12px 16px", borderRadius: 16, fontSize: 14, lineHeight: 1.5 },
-  aiBubble: { background: "rgba(124,106,247,0.2)", border: "1px solid rgba(124,106,247,0.3)", alignSelf: "flex-start" },
-  userBubble: { background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)", alignSelf: "flex-end" },
-  aiLabel: { fontSize: 11, fontWeight: 700, color: "#a78bfa", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 },
+  bubble:    { maxWidth: "80%", padding: "12px 16px", borderRadius: 16, fontSize: 14, lineHeight: 1.5 },
+  aiBubble:  { background: "rgba(124,106,247,0.2)", border: "1px solid rgba(124,106,247,0.3)", alignSelf: "flex-start" },
+  userBubble:{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)", alignSelf: "flex-end" },
+  aiLabel:   { fontSize: 11, fontWeight: 700, color: "#a78bfa", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 },
+
+  // ── Chat: input row ───────────────────────────────────────
   inputRow: { display: "flex", gap: 8, padding: "12px 16px", borderTop: "1px solid rgba(255,255,255,0.1)", background: "rgba(0,0,0,0.2)", alignItems: "center" },
-  input: {
-    flex: 1, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)",
-    borderRadius: 12, color: "#fff", padding: "10px 14px", fontSize: 14, resize: "none",
-    outline: "none", fontFamily: "inherit",
-  },
-  micBtn: {
-    padding: "10px 14px", borderRadius: 12, border: "none", cursor: "pointer", fontSize: 16,
-  },
-  sendBtn: {
-    padding: "0 20px", borderRadius: 12, border: "none",
-    background: "linear-gradient(135deg, #7c6af7, #a78bfa)", color: "#fff",
-    fontWeight: 700, cursor: "pointer", fontSize: 14, height: 44,
-  },
-  kbToggleBar: {
-    padding: "6px 16px",
-    background: "rgba(0,0,0,0.15)",
-    borderTop: "1px solid rgba(255,255,255,0.07)",
-    display: "flex",
-    justifyContent: "center",
-  },
-  kbToggleBtn: {
-    background: "none",
-    border: "1px solid rgba(255,255,255,0.15)",
-    borderRadius: 20,
-    color: "rgba(255,255,255,0.65)",
-    cursor: "pointer",
-    fontSize: 11,
-    padding: "4px 18px",
-    fontFamily: "inherit",
-    letterSpacing: 0.5,
-  },
-  kbPanel: {
-    background: "rgba(0,0,0,0.3)",
-    padding: "10px 12px",
-    borderTop: "1px solid rgba(255,255,255,0.07)",
-    display: "flex",
-    flexDirection: "column",
-    gap: 5,
-    maxHeight: 210,
-    overflowY: "auto",
-  },
-  kbRow: {
-    display: "flex",
-    justifyContent: "center",
-    gap: 4,
-  },
-  kbKey: {
-    minWidth: 28,
-    height: 34,
-    borderRadius: 6,
-    border: "1px solid rgba(255,255,255,0.15)",
-    background: "rgba(255,255,255,0.07)",
-    color: "#fff",
-    cursor: "pointer",
-    fontSize: 13,
-    fontFamily: "inherit",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "0 7px",
-    transition: "background 0.12s, box-shadow 0.12s, border-color 0.12s",
-    userSelect: "none",
-  },
-  kbKeyActive: {
-    background: "rgba(124,106,247,0.55)",
-    border: "1px solid #a78bfa",
-    boxShadow: "0 0 10px rgba(167,139,250,0.7)",
-  },
-  kbHint: {
-    fontSize: 10,
-    color: "rgba(255,255,255,0.4)",
-    textAlign: "center",
-    padding: "2px 8px 6px",
-    lineHeight: 1.5,
-    borderBottom: "1px solid rgba(255,255,255,0.06)",
-    marginBottom: 4,
-  },
-  kbGroupLabel: {
-    fontSize: 9,
-    color: "rgba(255,255,255,0.3)",
-    fontStyle: "italic",
-    minWidth: 10,
-    textAlign: "right",
-  },
-  kbKeySpecial: {
-    background: "rgba(167,139,250,0.1)",
-    border: "1px solid rgba(167,139,250,0.3)",
-    fontSize: 12,
-    minWidth: 26,
-    padding: "0 6px",
-  },
+  input:    { flex: 1, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, color: "#fff", padding: "10px 14px", fontSize: 14, resize: "none", outline: "none", fontFamily: "inherit" },
+  micBtn:   { padding: "10px 14px", borderRadius: 12, border: "none", cursor: "pointer", fontSize: 16 },
+  sendBtn:  { padding: "0 20px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #7c6af7, #a78bfa)", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: 14, height: 44 },
+
+  // ── Keyboard ──────────────────────────────────────────────
+  kbToggleBar: { padding: "6px 16px", background: "rgba(0,0,0,0.15)", borderTop: "1px solid rgba(255,255,255,0.07)", display: "flex", justifyContent: "center" },
+  kbToggleBtn: { background: "none", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 20, color: "rgba(255,255,255,0.65)", cursor: "pointer", fontSize: 11, padding: "4px 18px", fontFamily: "inherit", letterSpacing: 0.5 },
+  kbPanel:     { background: "rgba(0,0,0,0.3)", padding: "10px 12px", borderTop: "1px solid rgba(255,255,255,0.07)", display: "flex", flexDirection: "column", gap: 5, maxHeight: 210, overflowY: "auto" },
+  kbRow:       { display: "flex", justifyContent: "center", gap: 4 },
+  kbKey:       { minWidth: 28, height: 34, borderRadius: 6, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.07)", color: "#fff", cursor: "pointer", fontSize: 13, fontFamily: "inherit", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 7px", transition: "background 0.12s, box-shadow 0.12s, border-color 0.12s", userSelect: "none" },
+  kbKeyActive: { background: "rgba(124,106,247,0.55)", border: "1px solid #a78bfa", boxShadow: "0 0 10px rgba(167,139,250,0.7)" },
+  kbHint:      { fontSize: 10, color: "rgba(255,255,255,0.4)", textAlign: "center", padding: "2px 8px 6px", lineHeight: 1.5, borderBottom: "1px solid rgba(255,255,255,0.06)", marginBottom: 4 },
+  kbGroupLabel:{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontStyle: "italic", minWidth: 10, textAlign: "right" },
+  kbKeySpecial:{ background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.3)", fontSize: 12, minWidth: 26, padding: "0 6px" },
 };
