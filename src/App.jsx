@@ -73,7 +73,19 @@ const KEYBOARDS = {
       ["A","S","D","F","G","H","J","K","L"],
       ["Z","X","C","V","B","N","M"],
     ],
-    specials: ["ā","á","ǎ","à","ē","é","ě","è","ī","í","ǐ","ì","ō","ó","ǒ","ò","ū","ú","ǔ","ù","ǖ","ǘ","ǚ","ǜ"],
+    charHints: {
+      "Q":"去","W":"我","E":"鹅","R":"人","T":"他","Y":"有","U":"五","I":"以","O":"哦","P":"朋",
+      "A":"啊","S":"是","D":"的","F":"发","G":"个","H":"好","J":"就","K":"看","L":"了",
+      "Z":"在","X":"小","C":"从","V":"鱼","B":"不","N":"你","M":"们",
+    },
+    specialGroups: [
+      { label: "a", chars: ["ā","á","ǎ","à"] },
+      { label: "e", chars: ["ē","é","ě","è"] },
+      { label: "i", chars: ["ī","í","ǐ","ì"] },
+      { label: "o", chars: ["ō","ó","ǒ","ò"] },
+      { label: "u", chars: ["ū","ú","ǔ","ù"] },
+      { label: "ü", chars: ["ǖ","ǘ","ǚ","ǜ"] },
+    ],
   },
 };
 
@@ -421,7 +433,26 @@ Start by greeting the student warmly in ${lang.name}.
                         <span style={{ fontSize: 13, lineHeight: 1.2 }}>{key}</span>
                         <span style={{ fontSize: 8, color: "rgba(255,255,255,0.4)", lineHeight: 1 }}>{revKeyMap[key] || ""}</span>
                       </>
+                    ) : selectedLang.code === "zh" && kb.charHints?.[key] ? (
+                      <>
+                        <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.2 }}>{key}</span>
+                        <span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", lineHeight: 1 }}>{kb.charHints[key]}</span>
+                      </>
                     ) : key}
+                  </button>
+                ))}
+              </div>
+            ))}
+            {kb.specialGroups?.map((group) => (
+              <div key={group.label} style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 4 }}>
+                <span style={styles.kbGroupLabel}>{group.label}:</span>
+                {group.chars.map((key) => (
+                  <button
+                    key={key}
+                    style={{ ...styles.kbKey, ...styles.kbKeySpecial, ...(isKeyActive(key) ? styles.kbKeyActive : {}) }}
+                    onClick={() => setInput(prev => prev + key)}
+                  >
+                    {key}
                   </button>
                 ))}
               </div>
@@ -619,6 +650,13 @@ const styles = {
     background: "rgba(124,106,247,0.55)",
     border: "1px solid #a78bfa",
     boxShadow: "0 0 10px rgba(167,139,250,0.7)",
+  },
+  kbGroupLabel: {
+    fontSize: 9,
+    color: "rgba(255,255,255,0.3)",
+    fontStyle: "italic",
+    minWidth: 10,
+    textAlign: "right",
   },
   kbKeySpecial: {
     background: "rgba(167,139,250,0.1)",
