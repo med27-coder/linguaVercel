@@ -137,7 +137,11 @@ Start by greeting the student warmly in ${lang.name}.
       return;
     }
     try {
-      const cleanText = text.replace(/💡 Correction:.*$/gm, "").trim();
+      const cleanText = text
+        .replace(/💡 Correction:.*$/gm, "")
+        .split("🔊 Pronunciation:")[0]
+        .split("💬 Try saying:")[0]
+        .trim();
       const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
         method: "POST",
         headers: {
