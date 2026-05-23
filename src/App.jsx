@@ -208,7 +208,8 @@ export default function App() {
   // --- Keyboard ---
   const [kbOpen, setKbOpen] = useState(false);
 
-  const bottomRef = useRef(null);
+  const bottomRef      = useRef(null);
+  const recognitionRef = useRef(null);
 
   // ── Effects ───────────────────────────────────────────────
 
@@ -230,10 +231,11 @@ export default function App() {
     if (!SpeechRecognition) return alert("Speech recognition not supported in this browser.");
     if (isListening) return;
     const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
     recognition.lang = selectedLang?.srLang || "en-US";
     recognition.interimResults = false;
     recognition.onstart = () => setIsListening(true);
-    recognition.onend   = () => setIsListening(false);
+    recognition.onend   = () => { setIsListening(false); recognitionRef.current = null; };
     recognition.onresult = (e) => {
       const transcript = e.results[0][0].transcript.trim();
       if (!transcript || loading) return;
@@ -379,8 +381,10 @@ Start by greeting the student warmly in ${lang.name}.
       }
       const url   = URL.createObjectURL(await res.blob());
       const audio = new Audio(url);
-      audio.onended = () => URL.revokeObjectURL(url);
-      audio.play();
+      const revokeUrl = () => URL.revokeObjectURL(url);
+      audio.onended = revokeUrl;
+      audio.onerror = revokeUrl;
+      audio.play().catch(revokeUrl);
     } catch (err) {
       console.error("ElevenLabs error:", err);
       setVoiceEnabled(false);
@@ -499,7 +503,12 @@ Start by greeting the student warmly in ${lang.name}.
 
         {/* Header */}
         <div style={styles.header}>
-          <button style={styles.backBtn} onClick={() => setStarted(false)}>← Back</button>
+          <button style={styles.backBtn} onClick={() => {
+            recognitionRef.current?.stop();
+            setInput("");
+            setLoading(false);
+            setStarted(false);
+          }}>← Back</button>
           <div style={styles.headerCenter}>
             <span style={{ fontSize: 22 }}>{selectedLang.flag}</span>
             <span style={{ fontWeight: 700, fontSize: 16 }}>{selectedLang.name}</span>
