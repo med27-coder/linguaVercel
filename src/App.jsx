@@ -12,7 +12,7 @@ const LANGUAGES = [
   { code: "sw", name: "Swahili", flag: "🇰🇪", voiceId: "pFZP5JQG7iQjIQuC4Bku", srLang: "sw-KE" },
   { code: "en", name: "English", flag: "🇺🇸", voiceId: "21m00Tcm4TlvDq8ikWAM", srLang: "en-US" },
   { code: "ja", name: "Japanese", flag: "🇯🇵", voiceId: "AZnzlk1XvdvUeBnXmlld", srLang: "ja-JP" },
-  { code: "zh", name: "Chinese", flag: "🇨🇳", voiceId: "onwK4e9ZLuTAKqWW03F9", srLang: "zh-CN" },
+  { code: "zh", name: "Mandarin", flag: "🇨🇳", voiceId: "onwK4e9ZLuTAKqWW03F9", srLang: "zh-CN", dialect: "Simplified" },
 ];
 
 const LEVELS = ["Beginner", "Intermediate", "Advanced"];
@@ -61,6 +61,7 @@ export default function App() {
 You are Lingua, an expert AI language tutor for ${lang.name}.
 The student's level is: ${lvl}.
 The conversation topic is: ${topic.label} — ${topic.description}. Keep all conversation, vocabulary, and suggested sentences focused on this topic.
+${lang.dialect ? `Important: Use ${lang.dialect} script and standard ${lang.name} only. For Mandarin, this means Simplified Chinese characters (简体中文) as used in Mainland China.` : ""}
 
 NEVER use markdown: no **, no *, no #, no ---, no backticks. Plain text only.
 ${autoCorrect ? `If the student makes a grammar or spelling error, add a line "💡 Correction: [corrected sentence]" before anything else.` : "Do not explicitly correct errors."}
@@ -218,6 +219,7 @@ Start by greeting the student warmly in ${lang.name}.
                 >
                   <span style={{ fontSize: 28 }}>{lang.flag}</span>
                   <span style={{ fontSize: 13, fontWeight: 600 }}>{lang.name}</span>
+                  {lang.dialect && <span style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}>{lang.dialect}</span>}
                 </button>
               ))}
             </div>
