@@ -78,6 +78,13 @@ const KEYBOARDS = {
   zh: {
     label: "Mandarin Pinyin",
     hint: "Type Pinyin (e.g. 'ni hao', 'wo ai ni') — the AI reads it as Mandarin. The characters shown are just pronunciation hints",
+    toneKey: [
+      { num: "1", shape: "ā", label: "flat" },
+      { num: "2", shape: "á", label: "rising" },
+      { num: "3", shape: "ǎ", label: "dip" },
+      { num: "4", shape: "à", label: "falling" },
+      { num: "·", shape: "",  label: "neutral" },
+    ],
     rows: [
       ["Q","W","E","R","T","Y","U","I","O","P"],
       ["A","S","D","F","G","H","J","K","L"],
@@ -137,6 +144,19 @@ function KeyboardPanel({ kb, langCode, lastTyped, onKeyClick }) {
   return (
     <div style={styles.kbPanel}>
       {kb.hint && <div style={styles.kbHint}>{kb.hint}</div>}
+
+      {kb.toneKey && (
+        <div style={styles.toneKeyRow}>
+          <span style={styles.toneKeyTitle}>Tones:</span>
+          {kb.toneKey.map(({ num, shape, label }) => (
+            <span key={num} style={styles.toneKeyItem}>
+              <span style={styles.toneKeyNum}>{num}</span>
+              {shape && <span style={styles.toneKeyShape}>{shape}</span>}
+              <span style={styles.toneKeyLabel}>{label}</span>
+            </span>
+          ))}
+        </div>
+      )}
 
       {kb.rows.map((row, ri) => (
         <div key={ri} style={styles.kbRow}>
@@ -683,6 +703,12 @@ const styles = {
   kbKeyActive: { background: "rgba(124,106,247,0.55)", border: "1px solid #a78bfa", boxShadow: "0 0 10px rgba(167,139,250,0.7)" },
   kbHint:      { fontSize: 10, color: "rgba(255,255,255,0.4)", textAlign: "center", padding: "2px 8px 6px", lineHeight: 1.5, borderBottom: "1px solid rgba(255,255,255,0.06)", marginBottom: 4 },
   kbGroupLabel:{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontStyle: "italic", minWidth: 10, textAlign: "right" },
+  toneKeyRow:  { display: "flex", justifyContent: "center", alignItems: "center", gap: 10, padding: "4px 8px 6px", borderBottom: "1px solid rgba(255,255,255,0.06)", marginBottom: 4, flexWrap: "wrap" },
+  toneKeyTitle:{ fontSize: 9, color: "rgba(255,255,255,0.35)", fontStyle: "italic", marginRight: 2 },
+  toneKeyItem: { display: "flex", alignItems: "center", gap: 3 },
+  toneKeyNum:  { fontSize: 11, fontWeight: 700, color: "#a78bfa", minWidth: 8, textAlign: "center" },
+  toneKeyShape:{ fontSize: 11, color: "rgba(255,255,255,0.6)" },
+  toneKeyLabel:{ fontSize: 9, color: "rgba(255,255,255,0.35)" },
   kbKeySpecial:{ background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.3)", fontSize: 12, minWidth: 26, padding: "0 6px" },
 
   // ── Native language bar ───────────────────────────────────
