@@ -27,6 +27,7 @@ const TOPICS = [
 const KEYBOARDS = {
   fr: {
     label: "French AZERTY",
+    hint: "Type normally — click the accented characters below to insert them (é, à, ç, œ...)",
     rows: [
       ["A","Z","E","R","T","Y","U","I","O","P"],
       ["Q","S","D","F","G","H","J","K","L","M"],
@@ -36,6 +37,7 @@ const KEYBOARDS = {
   },
   es: {
     label: "Spanish QWERTY",
+    hint: "Type normally — click the accented characters below to insert them (á, é, ñ, ¿, ¡...)",
     rows: [
       ["Q","W","E","R","T","Y","U","I","O","P"],
       ["A","S","D","F","G","H","J","K","L","Ñ"],
@@ -45,6 +47,7 @@ const KEYBOARDS = {
   },
   sw: {
     label: "Swahili QWERTY",
+    hint: "Swahili uses the standard Latin alphabet — type exactly as you would in English",
     rows: [
       ["Q","W","E","R","T","Y","U","I","O","P"],
       ["A","S","D","F","G","H","J","K","L"],
@@ -54,6 +57,7 @@ const KEYBOARDS = {
   },
   ja: {
     label: "Japanese Hiragana",
+    hint: "Click keys to insert hiragana directly, or type romaji (e.g. 'a' → あ, 'ka' → か) — the AI understands both",
     rows: [
       ["ろ","ぬ","ふ","あ","う","え","お","や","ゆ","よ"],
       ["た","て","い","す","か","ん","な","に","ら","せ"],
@@ -68,6 +72,7 @@ const KEYBOARDS = {
   },
   zh: {
     label: "Mandarin Pinyin",
+    hint: "Type Pinyin (e.g. 'ni hao', 'wo ai ni') — the AI reads it as Mandarin. The characters shown are just pronunciation hints",
     rows: [
       ["Q","W","E","R","T","Y","U","I","O","P"],
       ["A","S","D","F","G","H","J","K","L"],
@@ -420,6 +425,7 @@ Start by greeting the student warmly in ${lang.name}.
 
         {kbOpen && kb && (
           <div style={styles.kbPanel}>
+            {kb.hint && <div style={styles.kbHint}>{kb.hint}</div>}
             {kb.rows.map((row, ri) => (
               <div key={ri} style={styles.kbRow}>
                 {row.map((key) => (
@@ -650,6 +656,15 @@ const styles = {
     background: "rgba(124,106,247,0.55)",
     border: "1px solid #a78bfa",
     boxShadow: "0 0 10px rgba(167,139,250,0.7)",
+  },
+  kbHint: {
+    fontSize: 10,
+    color: "rgba(255,255,255,0.4)",
+    textAlign: "center",
+    padding: "2px 8px 6px",
+    lineHeight: 1.5,
+    borderBottom: "1px solid rgba(255,255,255,0.06)",
+    marginBottom: 4,
   },
   kbGroupLabel: {
     fontSize: 9,
