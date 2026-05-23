@@ -262,7 +262,9 @@ The conversation topic is: ${topic.label} — ${topic.description}. Keep all con
 ${lang.dialectNote ? `Important dialect rule: ${lang.dialectNote} Do not mix in vocabulary from other regional variants.` : ""}
 
 NEVER use markdown: no **, no *, no _, no #, no ---, no backticks. Plain text only.
-For ALL phonetic notation: use simple Latin letters and hyphens only (e.g. "bon-ZHOOR", "koh-MAH"). NEVER use IPA symbols (ʁ ɔ ɥ ʒ õ ɛ ə ɑ ŋ etc). Stress the loudest syllable in CAPS.
+For ALL phonetic notation: use simple Latin letters and hyphens only. NEVER use IPA symbols (ʁ ɔ ɥ ʒ õ ɛ ə ɑ ŋ etc). Stress the loudest syllable in CAPS. Example: "bon-ZHOOR", "koh-MAH".
+${lang.code === "zh" ? "For Mandarin phonetics: use numbered tone pinyin — write the tone number after each syllable (e.g. ni3 hao3, wo3 ai4 ni3, xie4 xie). This is essential so the student learns the correct tones." : ""}
+${lang.code === "ja" ? "For Japanese phonetics: use romaji with hyphens between syllables and CAPS on the stressed mora (e.g. ko-NI-chi-wa, a-ri-GA-to go-ZA-i-mas)." : ""}
 ${autoCorrect ? `If the student makes a grammar or spelling error, add a line "💡 Correction: [corrected sentence]" before anything else.` : "Do not explicitly correct errors."}
 
 ${lvl === "Beginner" ? `You MUST follow this EXACT format every reply:
@@ -368,6 +370,7 @@ Start by greeting the student warmly in ${lang.name}.
     try {
       const cleanText = text
         .replace(/💡 Correction:.*$/gm, "")
+        .replace(/^\(.*\)$/gm, "")
         .split("🔊 Pronunciation:")[0]
         .split("💬 Try saying:")[0]
         .trim();
@@ -585,7 +588,7 @@ Start by greeting the student warmly in ${lang.name}.
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={`Type or speak in ${selectedLang.name} or English...`}
+            placeholder={`Type or speak in ${selectedLang.name} or ${nativeLang.trim() || "English"}...`}
             rows={2}
             disabled={loading}
           />
