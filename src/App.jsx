@@ -450,8 +450,8 @@ Start by greeting the student warmly in ${lang.name}.
                   >
                     {selectedLang.code === "ja" ? (
                       <>
-                        <span style={{ fontSize: 13, lineHeight: 1.2 }}>{key}</span>
-                        <span style={{ fontSize: 8, color: "rgba(255,255,255,0.4)", lineHeight: 1 }}>{revKeyMap[key] || ""}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.2 }}>{revKeyMap[key] || ""}</span>
+                        <span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", lineHeight: 1 }}>{key}</span>
                       </>
                     ) : selectedLang.code === "zh" && kb.charHints?.[key] ? (
                       <>
