@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 
 const stripMarkdown = (text) => text
   .replace(/\*\*\*/g, "").replace(/\*\*/g, "").replace(/\*/g, "")
+  .replace(/_{3}/g, "").replace(/_{2}/g, "").replace(/(?<![a-zA-Z])_(?![a-zA-Z])/g, "")
   .replace(/^#{1,6}\s+/gm, "").replace(/^---+$/gm, "").replace(/^___+$/gm, "")
   .replace(/`{1,3}/g, "").replace(/^>\s+/gm, "")
   .replace(/\n{3,}/g, "\n\n").trim();
@@ -260,7 +261,8 @@ The student's native language is ${native}. Always use ${native} for all transla
 The conversation topic is: ${topic.label} — ${topic.description}. Keep all conversation, vocabulary, and suggested sentences focused on this topic.
 ${lang.dialectNote ? `Important dialect rule: ${lang.dialectNote} Do not mix in vocabulary from other regional variants.` : ""}
 
-NEVER use markdown: no **, no *, no #, no ---, no backticks. Plain text only.
+NEVER use markdown: no **, no *, no _, no #, no ---, no backticks. Plain text only.
+For ALL phonetic notation: use simple Latin letters and hyphens only (e.g. "bon-ZHOOR", "koh-MAH"). NEVER use IPA symbols (ʁ ɔ ɥ ʒ õ ɛ ə ɑ ŋ etc). Stress the loudest syllable in CAPS.
 ${autoCorrect ? `If the student makes a grammar or spelling error, add a line "💡 Correction: [corrected sentence]" before anything else.` : "Do not explicitly correct errors."}
 
 ${lvl === "Beginner" ? `You MUST follow this EXACT format every reply:
