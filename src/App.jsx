@@ -273,6 +273,10 @@ Start by greeting the student warmly in ${lang.name}.
             </label>
           </div>
 
+          <div style={styles.landingDisclaimer}>
+            ℹ️ Voice recognition listens in the selected language. No native keyboard? You can type pronunciations in English letters (e.g. "ni hao", "konnichiwa", "bonjour") and the AI will understand you.
+          </div>
+
           <button
             style={{ ...styles.startBtn, ...(selectedLang ? {} : styles.startBtnDisabled) }}
             onClick={startSession}
@@ -395,6 +399,11 @@ const styles = {
   topicBadge: { fontSize: 11, padding: "3px 8px", borderRadius: 20, background: "rgba(167,139,250,0.3)", fontWeight: 600 },
   toggleRow: { display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 },
   toggleLabel: { display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "rgba(255,255,255,0.7)", cursor: "pointer" },
+  landingDisclaimer: {
+    fontSize: 12, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.05)",
+    border: "1px dashed rgba(255,255,255,0.15)", borderRadius: 10, padding: "10px 14px",
+    marginBottom: 16, lineHeight: 1.6, textAlign: "center",
+  },
   startBtn: {
     width: "100%", padding: "16px 0", borderRadius: 14, border: "none",
     background: "linear-gradient(135deg, #7c6af7, #a78bfa)", color: "#fff",
