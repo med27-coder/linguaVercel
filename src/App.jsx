@@ -11,7 +11,7 @@ const LANGUAGES = [
 
 const LEVELS = ["Beginner", "Intermediate", "Advanced"];
 
-const GEMINI_KEY = "AIzaSyAa2NUKVDL5Bl8NPjX3FPV5H0OH_V9lixw";
+const GEMINI_KEY = "AIzaSyAHJBzgco6J7lZkWs3nsx2Kzx_lQNX8zN4";
 const ELEVEN_KEY = "sk_71a53d3e2727b22d98fa4e579e00c0f23b2939fd600ef390";
 
 export default function App() {
