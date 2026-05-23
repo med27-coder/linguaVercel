@@ -251,10 +251,12 @@ export default function App() {
 
   // ── System prompt ─────────────────────────────────────────
 
-  const buildSystemPrompt = (lang, lvl) => `
+  const buildSystemPrompt = (lang, lvl) => {
+    const native = nativeLang.trim() || "English";
+    return `
 You are Lingua, an expert AI language tutor for ${lang.name}.
 The student's level is: ${lvl}.
-The student's native language is ${nativeLang}. Always use ${nativeLang} for all translations, explanations, and suggested sentence meanings — never use any other language for these.
+The student's native language is ${native}. Always use ${native} for all translations, explanations, and suggested sentence meanings — never use any other language for these.
 The conversation topic is: ${topic.label} — ${topic.description}. Keep all conversation, vocabulary, and suggested sentences focused on this topic.
 ${lang.dialectNote ? `Important dialect rule: ${lang.dialectNote} Do not mix in vocabulary from other regional variants.` : ""}
 
@@ -264,33 +266,34 @@ ${autoCorrect ? `If the student makes a grammar or spelling error, add a line "�
 ${lvl === "Beginner" ? `You MUST follow this EXACT format every reply:
 
 [Your conversational reply in ${lang.name} — 2 to 3 simple sentences]
-(${nativeLang} translation of your reply)
+(${native} translation of your reply)
 
 🔊 Pronunciation: word1 [phonetic1] · word2 [phonetic2] · word3 [phonetic3]
 
 💬 Try saying:
-• [full sentence in ${lang.name}] [phonetic] — [${nativeLang} meaning]
-• [full sentence in ${lang.name}] [phonetic] — [${nativeLang} meaning]
-• [full sentence in ${lang.name}] [phonetic] — [${nativeLang} meaning]
+• [full sentence in ${lang.name}] [phonetic] — [${native} meaning]
+• [full sentence in ${lang.name}] [phonetic] — [${native} meaning]
+• [full sentence in ${lang.name}] [phonetic] — [${native} meaning]
 
 Use simple vocabulary and short sentences only.`
 
 : lvl === "Intermediate" ? `You MUST follow this EXACT format every reply:
 
 [Your conversational reply in ${lang.name} — 2 to 3 sentences]
-(${nativeLang} translation of your reply)
+(${native} translation of your reply)
 
 💬 Try saying:
-• [full sentence in ${lang.name}] — [${nativeLang} meaning]
-• [full sentence in ${lang.name}] — [${nativeLang} meaning]
-• [full sentence in ${lang.name}] — [${nativeLang} meaning]
+• [full sentence in ${lang.name}] — [${native} meaning]
+• [full sentence in ${lang.name}] — [${native} meaning]
+• [full sentence in ${lang.name}] — [${native} meaning]
 
 Do NOT include a pronunciation section unless the student explicitly asks for pronunciation of a word or phrase — in that case provide it on a line starting with "🔊 Pronunciation:" then resume normal format. Mix simple and complex structures.`
 
-: `Respond naturally in ${lang.name} only — no ${nativeLang} translation, no pronunciation section, no suggested sentences. Speak to the student as you would a native speaker. If the student explicitly asks for pronunciation of a word or phrase, provide it on a line starting with "🔊 Pronunciation:" then resume normal conversation. Use natural, native-level language.`}
+: `Respond naturally in ${lang.name} only — no ${native} translation, no pronunciation section, no suggested sentences. Speak to the student as you would a native speaker. If the student explicitly asks for pronunciation of a word or phrase, provide it on a line starting with "🔊 Pronunciation:" then resume normal conversation. Use natural, native-level language.`}
 
 Start by greeting the student warmly in ${lang.name}.
 `;
+  };
 
   // ── Session management ────────────────────────────────────
 
@@ -301,7 +304,7 @@ Start by greeting the student warmly in ${lang.name}.
     setKbOpen(false);
     setMessages([{
       role: "system",
-      content: `ℹ️ Voice recognition is set to ${selectedLang.nativeScript} (${selectedLang.name}). For best results, speak in ${selectedLang.name}.\n\nNo ${selectedLang.name} keyboard? No problem — you can type the pronunciation in English letters (e.g. "ni hao", "bonjour", "hola") and the AI will understand you.`,
+      content: `ℹ️ Voice recognition is set to ${selectedLang.nativeScript} (${selectedLang.name}). For best results, speak in ${selectedLang.name}.\n\nNo ${selectedLang.name} keyboard? No problem — you can type the pronunciation in Latin letters (e.g. "ni hao", "bonjour", "hola") and the AI will understand you.`,
     }]);
     sendToGemini([], true);
   };
@@ -480,7 +483,7 @@ Start by greeting the student warmly in ${lang.name}.
           </div>
 
           <div style={styles.landingDisclaimer}>
-            ℹ️ Voice recognition listens in the selected language. No native keyboard? You can type pronunciations in English letters (e.g. "ni hao", "konnichiwa", "bonjour") and the AI will understand you.
+            ℹ️ Voice recognition listens in the selected language. No native keyboard? You can type pronunciations in Latin letters (e.g. "ni hao", "konnichiwa", "bonjour") and the AI will understand you.
           </div>
 
           <button
@@ -522,21 +525,20 @@ Start by greeting the student warmly in ${lang.name}.
           </div>
         </div>
 
+        {/* Native language bar */}
+        <div style={styles.nativeLangBar}>
+          <span style={styles.nativeLangLabel}>🌍 My language:</span>
+          <input
+            style={styles.nativeLangInput}
+            value={nativeLang}
+            onChange={(e) => setNativeLang(e.target.value)}
+            placeholder="English"
+            spellCheck={false}
+          />
+        </div>
+
         {/* Message list */}
         <div style={styles.messages}>
-
-          {/* Native language box */}
-          <div style={styles.nativeLangBox}>
-            <span>🌍 My native language (for translations)</span>
-            <input
-              style={styles.nativeLangInput}
-              value={nativeLang}
-              onChange={(e) => setNativeLang(e.target.value)}
-              placeholder="e.g. Spanish, Arabic, French..."
-              spellCheck={false}
-            />
-          </div>
-
           {messages.map((msg, i) => (
             msg.role === "system"
               ? <div key={i} style={styles.systemMsg}>{msg.content}</div>
@@ -677,7 +679,8 @@ const styles = {
   kbGroupLabel:{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontStyle: "italic", minWidth: 10, textAlign: "right" },
   kbKeySpecial:{ background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.3)", fontSize: 12, minWidth: 26, padding: "0 6px" },
 
-  // ── Native language box ───────────────────────────────────
-  nativeLangBox:   { alignSelf: "center", width: "90%", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.05)", border: "1px dashed rgba(255,255,255,0.15)", borderRadius: 12, padding: "10px 16px" },
-  nativeLangInput: { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, color: "#fff", padding: "6px 14px", fontSize: 13, outline: "none", fontFamily: "inherit", textAlign: "center", width: "60%" },
+  // ── Native language bar ───────────────────────────────────
+  nativeLangBar:   { display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "5px 16px", background: "rgba(0,0,0,0.15)", borderBottom: "1px solid rgba(255,255,255,0.07)", flexShrink: 0 },
+  nativeLangLabel: { fontSize: 11, color: "rgba(255,255,255,0.4)", whiteSpace: "nowrap" },
+  nativeLangInput: { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, color: "#fff", padding: "3px 10px", fontSize: 12, outline: "none", fontFamily: "inherit", textAlign: "center", width: 120 },
 };
