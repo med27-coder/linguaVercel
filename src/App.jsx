@@ -11,12 +11,20 @@ const LANGUAGES = [
 
 const LEVELS = ["Beginner", "Intermediate", "Advanced"];
 
+const TOPICS = [
+  { id: "daily", label: "Daily Life & Small Talk", emoji: "💬", description: "Weather, family, hobbies, casual conversation" },
+  { id: "food",  label: "Food & Restaurants",      emoji: "🍽️", description: "Ordering food, describing meals, recipes" },
+  { id: "travel",label: "Travel & Directions",     emoji: "✈️", description: "Airports, hotels, asking for directions" },
+  { id: "business",label:"Business & Work",        emoji: "💼", description: "Meetings, emails, professional introductions" },
+];
+
 const GEMINI_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 const ELEVEN_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY;
 
 export default function App() {
   const [selectedLang, setSelectedLang] = useState(null);
   const [level, setLevel] = useState("Beginner");
+  const [topic, setTopic] = useState(TOPICS[0]);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,6 +54,7 @@ export default function App() {
   const buildSystemPrompt = (lang, lvl) => `
 You are Lingua, an expert AI language tutor for ${lang.name}.
 The student's level is: ${lvl}.
+The conversation topic is: ${topic.label} — ${topic.description}. Keep all conversation, vocabulary, and suggested sentences focused on this topic.
 
 You MUST follow this exact response format every single time, no exceptions:
 
@@ -208,6 +217,23 @@ Start by greeting the student warmly in ${lang.name}.
             </div>
           </div>
 
+          <div style={styles.section}>
+            <label style={styles.label}>Conversation Topic</label>
+            <div style={styles.topicGrid}>
+              {TOPICS.map((t) => (
+                <button
+                  key={t.id}
+                  style={{ ...styles.topicBtn, ...(topic.id === t.id ? styles.topicBtnActive : {}) }}
+                  onClick={() => setTopic(t)}
+                >
+                  <span style={{ fontSize: 22 }}>{t.emoji}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>{t.label}</span>
+                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}>{t.description}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div style={styles.toggleRow}>
             <label style={styles.toggleLabel}>
               <input type="checkbox" checked={voiceEnabled} onChange={(e) => setVoiceEnabled(e.target.checked)} />
@@ -240,6 +266,7 @@ Start by greeting the student warmly in ${lang.name}.
             <span style={{ fontSize: 22 }}>{selectedLang.flag}</span>
             <span style={{ fontWeight: 700, fontSize: 16 }}>{selectedLang.name}</span>
             <span style={styles.levelBadge}>{level}</span>
+            <span style={styles.topicBadge}>{topic.emoji} {topic.label}</span>
           </div>
           <div style={styles.stats}>
             💬 {messages.length} &nbsp; ✏️ {corrections}
@@ -327,6 +354,15 @@ const styles = {
     background: "rgba(255,255,255,0.05)", color: "#fff", cursor: "pointer", fontWeight: 600, fontSize: 14,
   },
   levelBtnActive: { border: "2px solid #7c6af7", background: "rgba(124,106,247,0.25)" },
+  topicGrid: { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 },
+  topicBtn: {
+    display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4,
+    padding: "12px 14px", borderRadius: 14, border: "2px solid rgba(255,255,255,0.1)",
+    background: "rgba(255,255,255,0.05)", cursor: "pointer", color: "#fff",
+    textAlign: "left", transition: "all 0.2s",
+  },
+  topicBtnActive: { border: "2px solid #7c6af7", background: "rgba(124,106,247,0.25)", boxShadow: "0 0 16px rgba(124,106,247,0.4)" },
+  topicBadge: { fontSize: 11, padding: "3px 8px", borderRadius: 20, background: "rgba(167,139,250,0.3)", fontWeight: 600 },
   toggleRow: { display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 },
   toggleLabel: { display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "rgba(255,255,255,0.7)", cursor: "pointer" },
   startBtn: {
