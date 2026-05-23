@@ -7,12 +7,12 @@ const stripMarkdown = (text) => text
   .replace(/\n{3,}/g, "\n\n").trim();
 
 const LANGUAGES = [
-  { code: "fr", name: "French",   flag: "🇫🇷", voiceId: "cgSgspJ2msm6clMCkdW9", srLang: "fr-FR", dialect: "Standard (France)",        dialectNote: "Use standard French as spoken in France. Use words like courriel, week-end, smartphone." },
-  { code: "es", name: "Spanish",  flag: "🇪🇸", voiceId: "EXAVITQu4vr4xnSDxMaL", srLang: "es-ES", dialect: "Castilian (Spain)",        dialectNote: "Use Castilian Spanish from Spain. Use vosotros, ordenador, coche, piso, móvil." },
-  { code: "sw", name: "Swahili",  flag: "🇰🇪", voiceId: "pFZP5JQG7iQjIQuC4Bku", srLang: "sw-KE", dialect: "Standard (Kiswahili Sanifu)", dialectNote: "Use Standard Swahili (Kiswahili Sanifu), the official form used in East Africa." },
-  { code: "en", name: "English",  flag: "🇺🇸", voiceId: "21m00Tcm4TlvDq8ikWAM", srLang: "en-US", dialect: "American",                dialectNote: "Use American English vocabulary and spelling. Use elevator, apartment, soccer, chips." },
-  { code: "ja", name: "Japanese", flag: "🇯🇵", voiceId: "AZnzlk1XvdvUeBnXmlld", srLang: "ja-JP", dialect: "Standard (Hyojungo)",      dialectNote: "Use standard Japanese (標準語/Hyojungo) as spoken in Tokyo and used in formal settings." },
-  { code: "zh", name: "Mandarin", flag: "🇨🇳", voiceId: "onwK4e9ZLuTAKqWW03F9", srLang: "zh-CN", dialect: "Simplified",               dialectNote: "Use Simplified Chinese characters (简体中文) as used in Mainland China." },
+  { code: "fr", name: "French",   nativeScript: "Français",   flag: "🇫🇷", voiceId: "cgSgspJ2msm6clMCkdW9", srLang: "fr-FR", dialect: "Standard (France)",         dialectNote: "Use standard French as spoken in France. Use words like courriel, week-end, smartphone." },
+  { code: "es", name: "Spanish",  nativeScript: "Español",    flag: "🇪🇸", voiceId: "EXAVITQu4vr4xnSDxMaL", srLang: "es-ES", dialect: "Castilian (Spain)",         dialectNote: "Use Castilian Spanish from Spain. Use vosotros, ordenador, coche, piso, móvil." },
+  { code: "sw", name: "Swahili",  nativeScript: "Kiswahili",  flag: "🇰🇪", voiceId: "pFZP5JQG7iQjIQuC4Bku", srLang: "sw-KE", dialect: "Standard (Kiswahili Sanifu)", dialectNote: "Use Standard Swahili (Kiswahili Sanifu), the official form used in East Africa." },
+  { code: "en", name: "English",  nativeScript: "English",    flag: "🇺🇸", voiceId: "21m00Tcm4TlvDq8ikWAM", srLang: "en-US", dialect: "American",                 dialectNote: "Use American English vocabulary and spelling. Use elevator, apartment, soccer, chips." },
+  { code: "ja", name: "Japanese", nativeScript: "日本語",      flag: "🇯🇵", voiceId: "AZnzlk1XvdvUeBnXmlld", srLang: "ja-JP", dialect: "Standard (Hyojungo)",       dialectNote: "Use standard Japanese (標準語/Hyojungo) as spoken in Tokyo and used in formal settings." },
+  { code: "zh", name: "Mandarin", nativeScript: "中文",        flag: "🇨🇳", voiceId: "onwK4e9ZLuTAKqWW03F9", srLang: "zh-CN", dialect: "Simplified",                dialectNote: "Use Simplified Chinese characters (简体中文) as used in Mainland China." },
 ];
 
 const LEVELS = ["Beginner", "Intermediate", "Advanced"];
@@ -100,8 +100,12 @@ Start by greeting the student warmly in ${lang.name}.
   const startSession = () => {
     if (!selectedLang) return;
     setStarted(true);
-    setMessages([]);
     setCorrections(0);
+    const disclaimer = {
+      role: "system",
+      content: `ℹ️ Voice recognition is set to ${selectedLang.nativeScript} (${selectedLang.name}). For best results, speak in ${selectedLang.name}.\n\nNo ${selectedLang.name} keyboard? No problem — you can type the pronunciation in English letters (e.g. "ni hao", "bonjour", "hola") and the AI will understand you.`,
+    };
+    setMessages([disclaimer]);
     sendToGemini([], true);
   };
 
@@ -219,7 +223,8 @@ Start by greeting the student warmly in ${lang.name}.
                 >
                   <span style={{ fontSize: 28 }}>{lang.flag}</span>
                   <span style={{ fontSize: 13, fontWeight: 600 }}>{lang.name}</span>
-                  {lang.dialect && <span style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}>{lang.dialect}</span>}
+                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", fontWeight: 500 }}>{lang.nativeScript}</span>
+                  {lang.dialect && <span style={{ fontSize: 10, color: "rgba(255,255,255,0.45)" }}>{lang.dialect}</span>}
                 </button>
               ))}
             </div>
@@ -298,10 +303,12 @@ Start by greeting the student warmly in ${lang.name}.
 
         <div style={styles.messages}>
           {messages.map((msg, i) => (
-            <div key={i} style={{ ...styles.bubble, ...(msg.role === "user" ? styles.userBubble : styles.aiBubble) }}>
-              {msg.role === "assistant" && <div style={styles.aiLabel}>🌐 Lingua</div>}
-              <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{msg.content}</div>
-            </div>
+            msg.role === "system"
+              ? <div key={i} style={styles.systemMsg}>{msg.content}</div>
+              : <div key={i} style={{ ...styles.bubble, ...(msg.role === "user" ? styles.userBubble : styles.aiBubble) }}>
+                  {msg.role === "assistant" && <div style={styles.aiLabel}>🌐 Lingua</div>}
+                  <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{msg.content}</div>
+                </div>
           ))}
           {loading && (
             <div style={{ ...styles.bubble, ...styles.aiBubble }}>
@@ -410,6 +417,7 @@ const styles = {
   levelBadge: { fontSize: 11, padding: "3px 8px", borderRadius: 20, background: "rgba(124,106,247,0.4)", fontWeight: 600 },
   stats: { fontSize: 13, color: "rgba(255,255,255,0.5)" },
   messages: { flex: 1, overflowY: "auto", padding: "20px 16px", display: "flex", flexDirection: "column", gap: 14 },
+  systemMsg: { alignSelf: "center", textAlign: "center", fontSize: 12, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.05)", border: "1px dashed rgba(255,255,255,0.15)", borderRadius: 12, padding: "10px 16px", maxWidth: "90%", whiteSpace: "pre-wrap", lineHeight: 1.6 },
   bubble: { maxWidth: "80%", padding: "12px 16px", borderRadius: 16, fontSize: 14, lineHeight: 1.5 },
   aiBubble: { background: "rgba(124,106,247,0.2)", border: "1px solid rgba(124,106,247,0.3)", alignSelf: "flex-start" },
   userBubble: { background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)", alignSelf: "flex-end" },
