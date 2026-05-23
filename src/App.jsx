@@ -228,7 +228,8 @@ export default function App() {
   const [lastTyped,   setLastTyped]   = useState("");
 
   // --- Keyboard ---
-  const [kbOpen, setKbOpen] = useState(false);
+  const [kbOpen,       setKbOpen]       = useState(false);
+  const [toneRefOpen,  setToneRefOpen]  = useState(true);
 
   const bottomRef      = useRef(null);
   const recognitionRef = useRef(null);
@@ -563,6 +564,37 @@ Start by greeting the student warmly in ${lang.name}.
           <span style={styles.nativeLangHint}>— set once, remembered for this session</span>
         </div>
 
+        {/* Mandarin tone reference */}
+        {selectedLang?.code === "zh" && (
+          <div style={styles.toneRefBar}>
+            <div style={styles.toneRefHeader} onClick={() => setToneRefOpen((o) => !o)}>
+              <span style={styles.toneRefTitle}>🎵 Mandarin Tone Reference</span>
+              <span style={styles.toneRefToggle}>{toneRefOpen ? "▲ hide" : "▼ show"}</span>
+            </div>
+            {toneRefOpen && (
+              <div style={styles.toneRefGrid}>
+                {[
+                  { num: "1", shape: "ā", name: "Flat",    desc: "High & steady",   example: "mā 妈 mother" },
+                  { num: "2", shape: "á", name: "Rising",  desc: "Rises up",         example: "má 麻 hemp"   },
+                  { num: "3", shape: "ǎ", name: "Dip",     desc: "Falls then rises", example: "mǎ 马 horse"  },
+                  { num: "4", shape: "à", name: "Falling", desc: "Sharp drop",       example: "mà 骂 scold"  },
+                  { num: "·", shape: "a", name: "Neutral", desc: "Short, unstressed",example: "ma 吗 (question)" },
+                ].map(({ num, shape, name, desc, example }) => (
+                  <div key={num} style={styles.toneRefCard}>
+                    <div style={styles.toneRefCardTop}>
+                      <span style={styles.toneRefNum}>{num}</span>
+                      <span style={styles.toneRefShape}>{shape}</span>
+                      <span style={styles.toneRefName}>{name}</span>
+                    </div>
+                    <div style={styles.toneRefDesc}>{desc}</div>
+                    <div style={styles.toneRefExample}>{example}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Message list */}
         <div style={styles.messages}>
           {messages.map((msg, i) => (
@@ -710,6 +742,20 @@ const styles = {
   toneKeyShape:{ fontSize: 11, color: "rgba(255,255,255,0.6)" },
   toneKeyLabel:{ fontSize: 9, color: "rgba(255,255,255,0.35)" },
   kbKeySpecial:{ background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.3)", fontSize: 12, minWidth: 26, padding: "0 6px" },
+
+  // ── Mandarin tone reference ───────────────────────────────
+  toneRefBar:     { borderBottom: "1px solid rgba(167,139,250,0.2)", background: "rgba(167,139,250,0.04)", flexShrink: 0 },
+  toneRefHeader:  { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 16px", cursor: "pointer", userSelect: "none" },
+  toneRefTitle:   { fontSize: 11, color: "#a78bfa", fontWeight: 600 },
+  toneRefToggle:  { fontSize: 9,  color: "rgba(167,139,250,0.5)", fontStyle: "italic" },
+  toneRefGrid:    { display: "flex", gap: 6, padding: "4px 16px 8px", overflowX: "auto" },
+  toneRefCard:    { flex: "0 0 auto", background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)", borderRadius: 8, padding: "6px 10px", minWidth: 90, textAlign: "center" },
+  toneRefCardTop: { display: "flex", justifyContent: "center", alignItems: "baseline", gap: 4, marginBottom: 3 },
+  toneRefNum:     { fontSize: 15, fontWeight: 800, color: "#a78bfa", lineHeight: 1 },
+  toneRefShape:   { fontSize: 15, fontWeight: 600, color: "#fff",    lineHeight: 1 },
+  toneRefName:    { fontSize: 9,  color: "rgba(255,255,255,0.5)",    marginLeft: 2 },
+  toneRefDesc:    { fontSize: 9,  color: "rgba(255,255,255,0.4)",    marginBottom: 3 },
+  toneRefExample: { fontSize: 9,  color: "#a78bfa",                  fontStyle: "italic" },
 
   // ── Native language bar ───────────────────────────────────
   nativeLangBar:   { display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "6px 16px", background: "rgba(251,191,36,0.08)", borderBottom: "2px solid rgba(251,191,36,0.5)", flexShrink: 0 },
