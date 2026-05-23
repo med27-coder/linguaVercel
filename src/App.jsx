@@ -11,8 +11,8 @@ const LANGUAGES = [
 
 const LEVELS = ["Beginner", "Intermediate", "Advanced"];
 
-const GEMINI_KEY = "AIzaSyAHJBzgco6J7lZkWs3nsx2Kzx_lQNX8zN4";
-const ELEVEN_KEY = "sk_71a53d3e2727b22d98fa4e579e00c0f23b2939fd600ef390";
+const GEMINI_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+const ELEVEN_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY;
 
 export default function App() {
   const [selectedLang, setSelectedLang] = useState(null);
@@ -80,7 +80,7 @@ Start by greeting the student warmly in ${lang.name}.
           }));
 
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -91,6 +91,7 @@ Start by greeting the student warmly in ${lang.name}.
         }
       );
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || `API error ${res.status}`);
       const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't respond.";
 
       if (reply.includes("💡 Correction:")) setCorrections((c) => c + 1);
