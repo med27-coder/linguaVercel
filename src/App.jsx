@@ -7,12 +7,12 @@ const stripMarkdown = (text) => text
   .replace(/\n{3,}/g, "\n\n").trim();
 
 const LANGUAGES = [
-  { code: "fr", name: "French", flag: "🇫🇷", voiceId: "cgSgspJ2msm6clMCkdW9", srLang: "fr-FR" },
-  { code: "es", name: "Spanish", flag: "🇪🇸", voiceId: "EXAVITQu4vr4xnSDxMaL", srLang: "es-ES" },
-  { code: "sw", name: "Swahili", flag: "🇰🇪", voiceId: "pFZP5JQG7iQjIQuC4Bku", srLang: "sw-KE" },
-  { code: "en", name: "English", flag: "🇺🇸", voiceId: "21m00Tcm4TlvDq8ikWAM", srLang: "en-US" },
-  { code: "ja", name: "Japanese", flag: "🇯🇵", voiceId: "AZnzlk1XvdvUeBnXmlld", srLang: "ja-JP" },
-  { code: "zh", name: "Mandarin", flag: "🇨🇳", voiceId: "onwK4e9ZLuTAKqWW03F9", srLang: "zh-CN", dialect: "Simplified" },
+  { code: "fr", name: "French",   flag: "🇫🇷", voiceId: "cgSgspJ2msm6clMCkdW9", srLang: "fr-FR", dialect: "Standard (France)",        dialectNote: "Use standard French as spoken in France. Use words like courriel, week-end, smartphone." },
+  { code: "es", name: "Spanish",  flag: "🇪🇸", voiceId: "EXAVITQu4vr4xnSDxMaL", srLang: "es-ES", dialect: "Castilian (Spain)",        dialectNote: "Use Castilian Spanish from Spain. Use vosotros, ordenador, coche, piso, móvil." },
+  { code: "sw", name: "Swahili",  flag: "🇰🇪", voiceId: "pFZP5JQG7iQjIQuC4Bku", srLang: "sw-KE", dialect: "Standard (Kiswahili Sanifu)", dialectNote: "Use Standard Swahili (Kiswahili Sanifu), the official form used in East Africa." },
+  { code: "en", name: "English",  flag: "🇺🇸", voiceId: "21m00Tcm4TlvDq8ikWAM", srLang: "en-US", dialect: "American",                dialectNote: "Use American English vocabulary and spelling. Use elevator, apartment, soccer, chips." },
+  { code: "ja", name: "Japanese", flag: "🇯🇵", voiceId: "AZnzlk1XvdvUeBnXmlld", srLang: "ja-JP", dialect: "Standard (Hyojungo)",      dialectNote: "Use standard Japanese (標準語/Hyojungo) as spoken in Tokyo and used in formal settings." },
+  { code: "zh", name: "Mandarin", flag: "🇨🇳", voiceId: "onwK4e9ZLuTAKqWW03F9", srLang: "zh-CN", dialect: "Simplified",               dialectNote: "Use Simplified Chinese characters (简体中文) as used in Mainland China." },
 ];
 
 const LEVELS = ["Beginner", "Intermediate", "Advanced"];
@@ -61,7 +61,7 @@ export default function App() {
 You are Lingua, an expert AI language tutor for ${lang.name}.
 The student's level is: ${lvl}.
 The conversation topic is: ${topic.label} — ${topic.description}. Keep all conversation, vocabulary, and suggested sentences focused on this topic.
-${lang.dialect ? `Important: Use ${lang.dialect} script and standard ${lang.name} only. For Mandarin, this means Simplified Chinese characters (简体中文) as used in Mainland China.` : ""}
+${lang.dialectNote ? `Important dialect rule: ${lang.dialectNote} Do not mix in vocabulary from other regional variants.` : ""}
 
 NEVER use markdown: no **, no *, no #, no ---, no backticks. Plain text only.
 ${autoCorrect ? `If the student makes a grammar or spelling error, add a line "💡 Correction: [corrected sentence]" before anything else.` : "Do not explicitly correct errors."}
