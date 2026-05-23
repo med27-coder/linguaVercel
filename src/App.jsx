@@ -18,11 +18,64 @@ const LANGUAGES = [
 const LEVELS = ["Beginner", "Intermediate", "Advanced"];
 
 const TOPICS = [
-  { id: "daily", label: "Daily Life & Small Talk", emoji: "💬", description: "Weather, family, hobbies, casual conversation" },
-  { id: "food",  label: "Food & Restaurants",      emoji: "🍽️", description: "Ordering food, describing meals, recipes" },
-  { id: "travel",label: "Travel & Directions",     emoji: "✈️", description: "Airports, hotels, asking for directions" },
-  { id: "business",label:"Business & Work",        emoji: "💼", description: "Meetings, emails, professional introductions" },
+  { id: "daily",    label: "Daily Life & Small Talk", emoji: "💬", description: "Weather, family, hobbies, casual conversation" },
+  { id: "food",     label: "Food & Restaurants",      emoji: "🍽️", description: "Ordering food, describing meals, recipes" },
+  { id: "travel",   label: "Travel & Directions",     emoji: "✈️", description: "Airports, hotels, asking for directions" },
+  { id: "business", label: "Business & Work",         emoji: "💼", description: "Meetings, emails, professional introductions" },
 ];
+
+const KEYBOARDS = {
+  fr: {
+    label: "French AZERTY",
+    rows: [
+      ["A","Z","E","R","T","Y","U","I","O","P"],
+      ["Q","S","D","F","G","H","J","K","L","M"],
+      ["W","X","C","V","B","N"],
+    ],
+    specials: ["é","è","ê","ë","à","â","ù","û","ü","ô","ö","î","ï","ç","œ","æ"],
+  },
+  es: {
+    label: "Spanish QWERTY",
+    rows: [
+      ["Q","W","E","R","T","Y","U","I","O","P"],
+      ["A","S","D","F","G","H","J","K","L","Ñ"],
+      ["Z","X","C","V","B","N","M"],
+    ],
+    specials: ["á","é","í","ó","ú","ü","¿","¡"],
+  },
+  sw: {
+    label: "Swahili QWERTY",
+    rows: [
+      ["Q","W","E","R","T","Y","U","I","O","P"],
+      ["A","S","D","F","G","H","J","K","L"],
+      ["Z","X","C","V","B","N","M"],
+    ],
+    specials: [],
+  },
+  ja: {
+    label: "Japanese Hiragana",
+    rows: [
+      ["ろ","ぬ","ふ","あ","う","え","お","や","ゆ","よ"],
+      ["た","て","い","す","か","ん","な","に","ら","せ"],
+      ["つ","さ","そ","ひ","こ","み","も"],
+    ],
+    specials: ["っ","ゃ","ゅ","ょ","ぁ","ぃ","ぅ","ぇ","ぉ","ー","。","、","「","」"],
+    keyMap: {
+      "q":"ろ","w":"ぬ","e":"ふ","r":"あ","t":"う","y":"え","u":"お","i":"や","o":"ゆ","p":"よ",
+      "a":"た","s":"て","d":"い","f":"す","g":"か","h":"ん","j":"な","k":"に","l":"ら",";":"せ",
+      "z":"つ","x":"さ","c":"そ","v":"ひ","b":"こ","n":"み","m":"も",
+    },
+  },
+  zh: {
+    label: "Mandarin Pinyin",
+    rows: [
+      ["Q","W","E","R","T","Y","U","I","O","P"],
+      ["A","S","D","F","G","H","J","K","L"],
+      ["Z","X","C","V","B","N","M"],
+    ],
+    specials: ["ā","á","ǎ","à","ē","é","ě","è","ī","í","ǐ","ì","ō","ó","ǒ","ò","ū","ú","ǔ","ù","ǖ","ǘ","ǚ","ǜ"],
+  },
+};
 
 const GEMINI_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 const ELEVEN_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY;
@@ -39,11 +92,21 @@ export default function App() {
   const [corrections, setCorrections] = useState(0);
   const [started, setStarted] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [kbOpen, setKbOpen] = useState(false);
+  const [lastTyped, setLastTyped] = useState("");
   const bottomRef = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (!input) { setLastTyped(""); return; }
+    const ch = input[input.length - 1];
+    setLastTyped(ch);
+    const t = setTimeout(() => setLastTyped(""), 600);
+    return () => clearTimeout(t);
+  }, [input]);
 
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -101,6 +164,7 @@ Start by greeting the student warmly in ${lang.name}.
     if (!selectedLang) return;
     setStarted(true);
     setCorrections(0);
+    setKbOpen(false);
     const disclaimer = {
       role: "system",
       content: `ℹ️ Voice recognition is set to ${selectedLang.nativeScript} (${selectedLang.name}). For best results, speak in ${selectedLang.name}.\n\nNo ${selectedLang.name} keyboard? No problem — you can type the pronunciation in English letters (e.g. "ni hao", "bonjour", "hola") and the AI will understand you.`,
@@ -289,6 +353,17 @@ Start by greeting the student warmly in ${lang.name}.
     );
   }
 
+  const kb = KEYBOARDS[selectedLang.code] || null;
+  const revKeyMap = kb?.keyMap
+    ? Object.fromEntries(Object.entries(kb.keyMap).map(([k, v]) => [v, k.toUpperCase()]))
+    : {};
+  const isKeyActive = (key) => {
+    if (!lastTyped || !kb) return false;
+    const lt = lastTyped.toLowerCase();
+    if (kb.keyMap) return kb.keyMap[lt] === key || key === lastTyped;
+    return key.toLowerCase() === lt || key === lastTyped;
+  };
+
   return (
     <div style={styles.page}>
       <div style={styles.chatWrapper}>
@@ -322,6 +397,50 @@ Start by greeting the student warmly in ${lang.name}.
           )}
           <div ref={bottomRef} />
         </div>
+
+        {kb && (
+          <div style={styles.kbToggleBar}>
+            <button style={styles.kbToggleBtn} onClick={() => setKbOpen(o => !o)}>
+              ⌨️ {kb.label} {kbOpen ? "▲" : "▼"}
+            </button>
+          </div>
+        )}
+
+        {kbOpen && kb && (
+          <div style={styles.kbPanel}>
+            {kb.rows.map((row, ri) => (
+              <div key={ri} style={styles.kbRow}>
+                {row.map((key) => (
+                  <button
+                    key={key}
+                    style={{ ...styles.kbKey, ...(isKeyActive(key) ? styles.kbKeyActive : {}) }}
+                    onClick={() => setInput(prev => prev + key.toLowerCase())}
+                  >
+                    {selectedLang.code === "ja" ? (
+                      <>
+                        <span style={{ fontSize: 13, lineHeight: 1.2 }}>{key}</span>
+                        <span style={{ fontSize: 8, color: "rgba(255,255,255,0.4)", lineHeight: 1 }}>{revKeyMap[key] || ""}</span>
+                      </>
+                    ) : key}
+                  </button>
+                ))}
+              </div>
+            ))}
+            {kb.specials && kb.specials.length > 0 && (
+              <div style={{ ...styles.kbRow, flexWrap: "wrap", gap: 3, marginTop: 2 }}>
+                {kb.specials.map((key) => (
+                  <button
+                    key={key}
+                    style={{ ...styles.kbKey, ...styles.kbKeySpecial, ...(isKeyActive(key) ? styles.kbKeyActive : {}) }}
+                    onClick={() => setInput(prev => prev + key)}
+                  >
+                    {key}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         <div style={styles.inputRow}>
           <textarea
@@ -444,5 +563,68 @@ const styles = {
     padding: "0 20px", borderRadius: 12, border: "none",
     background: "linear-gradient(135deg, #7c6af7, #a78bfa)", color: "#fff",
     fontWeight: 700, cursor: "pointer", fontSize: 14, height: 44,
+  },
+  kbToggleBar: {
+    padding: "6px 16px",
+    background: "rgba(0,0,0,0.15)",
+    borderTop: "1px solid rgba(255,255,255,0.07)",
+    display: "flex",
+    justifyContent: "center",
+  },
+  kbToggleBtn: {
+    background: "none",
+    border: "1px solid rgba(255,255,255,0.15)",
+    borderRadius: 20,
+    color: "rgba(255,255,255,0.65)",
+    cursor: "pointer",
+    fontSize: 11,
+    padding: "4px 18px",
+    fontFamily: "inherit",
+    letterSpacing: 0.5,
+  },
+  kbPanel: {
+    background: "rgba(0,0,0,0.3)",
+    padding: "10px 12px",
+    borderTop: "1px solid rgba(255,255,255,0.07)",
+    display: "flex",
+    flexDirection: "column",
+    gap: 5,
+    maxHeight: 210,
+    overflowY: "auto",
+  },
+  kbRow: {
+    display: "flex",
+    justifyContent: "center",
+    gap: 4,
+  },
+  kbKey: {
+    minWidth: 28,
+    height: 34,
+    borderRadius: 6,
+    border: "1px solid rgba(255,255,255,0.15)",
+    background: "rgba(255,255,255,0.07)",
+    color: "#fff",
+    cursor: "pointer",
+    fontSize: 13,
+    fontFamily: "inherit",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "0 7px",
+    transition: "background 0.12s, box-shadow 0.12s, border-color 0.12s",
+    userSelect: "none",
+  },
+  kbKeyActive: {
+    background: "rgba(124,106,247,0.55)",
+    border: "1px solid #a78bfa",
+    boxShadow: "0 0 10px rgba(167,139,250,0.7)",
+  },
+  kbKeySpecial: {
+    background: "rgba(167,139,250,0.1)",
+    border: "1px solid rgba(167,139,250,0.3)",
+    fontSize: 12,
+    minWidth: 26,
+    padding: "0 6px",
   },
 };
