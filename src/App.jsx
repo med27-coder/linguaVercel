@@ -1,5 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 
+const stripMarkdown = (text) => text
+  .replace(/\*\*\*/g, "").replace(/\*\*/g, "").replace(/\*/g, "")
+  .replace(/^#{1,6}\s+/gm, "").replace(/^---+$/gm, "").replace(/^___+$/gm, "")
+  .replace(/`{1,3}/g, "").replace(/^>\s+/gm, "")
+  .replace(/\n{3,}/g, "\n\n").trim();
+
 const LANGUAGES = [
   { code: "fr", name: "French", flag: "🇫🇷", voiceId: "cgSgspJ2msm6clMCkdW9", srLang: "fr-FR" },
   { code: "es", name: "Spanish", flag: "🇪🇸", voiceId: "EXAVITQu4vr4xnSDxMaL", srLang: "es-ES" },
@@ -122,7 +128,7 @@ Start by greeting the student warmly in ${lang.name}.
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error?.message || `API error ${res.status}`);
-      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't respond.";
+      const reply = stripMarkdown(data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't respond.");
 
       if (reply.includes("💡 Correction:")) setCorrections((c) => c + 1);
 
