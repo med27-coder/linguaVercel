@@ -193,6 +193,7 @@ export default function App() {
   const [topic,        setTopic]        = useState(TOPICS[0]);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [autoCorrect,  setAutoCorrect]  = useState(true);
+  const [nativeLang,   setNativeLang]   = useState("English");
 
   // --- Session ---
   const [started,     setStarted]     = useState(false);
@@ -253,6 +254,7 @@ export default function App() {
   const buildSystemPrompt = (lang, lvl) => `
 You are Lingua, an expert AI language tutor for ${lang.name}.
 The student's level is: ${lvl}.
+The student's native language is ${nativeLang}. Always use ${nativeLang} for all translations, explanations, and suggested sentence meanings — never use any other language for these.
 The conversation topic is: ${topic.label} — ${topic.description}. Keep all conversation, vocabulary, and suggested sentences focused on this topic.
 ${lang.dialectNote ? `Important dialect rule: ${lang.dialectNote} Do not mix in vocabulary from other regional variants.` : ""}
 
@@ -262,30 +264,30 @@ ${autoCorrect ? `If the student makes a grammar or spelling error, add a line "�
 ${lvl === "Beginner" ? `You MUST follow this EXACT format every reply:
 
 [Your conversational reply in ${lang.name} — 2 to 3 simple sentences]
-(English translation of your reply)
+(${nativeLang} translation of your reply)
 
 🔊 Pronunciation: word1 [phonetic1] · word2 [phonetic2] · word3 [phonetic3]
 
 💬 Try saying:
-• [full sentence in ${lang.name}] [phonetic] — [English meaning]
-• [full sentence in ${lang.name}] [phonetic] — [English meaning]
-• [full sentence in ${lang.name}] [phonetic] — [English meaning]
+• [full sentence in ${lang.name}] [phonetic] — [${nativeLang} meaning]
+• [full sentence in ${lang.name}] [phonetic] — [${nativeLang} meaning]
+• [full sentence in ${lang.name}] [phonetic] — [${nativeLang} meaning]
 
 Use simple vocabulary and short sentences only.`
 
 : lvl === "Intermediate" ? `You MUST follow this EXACT format every reply:
 
 [Your conversational reply in ${lang.name} — 2 to 3 sentences]
-(English translation of your reply)
+(${nativeLang} translation of your reply)
 
 💬 Try saying:
-• [full sentence in ${lang.name}] — [English meaning]
-• [full sentence in ${lang.name}] — [English meaning]
-• [full sentence in ${lang.name}] — [English meaning]
+• [full sentence in ${lang.name}] — [${nativeLang} meaning]
+• [full sentence in ${lang.name}] — [${nativeLang} meaning]
+• [full sentence in ${lang.name}] — [${nativeLang} meaning]
 
 Do NOT include a pronunciation section unless the student explicitly asks for pronunciation of a word or phrase — in that case provide it on a line starting with "🔊 Pronunciation:" then resume normal format. Mix simple and complex structures.`
 
-: `Respond naturally in ${lang.name} only — no English translation, no pronunciation section, no suggested sentences. Speak to the student as you would a native speaker. If the student explicitly asks for pronunciation of a word or phrase, provide it on a line starting with "🔊 Pronunciation:" then resume normal conversation. Use natural, native-level language.`}
+: `Respond naturally in ${lang.name} only — no ${nativeLang} translation, no pronunciation section, no suggested sentences. Speak to the student as you would a native speaker. If the student explicitly asks for pronunciation of a word or phrase, provide it on a line starting with "🔊 Pronunciation:" then resume normal conversation. Use natural, native-level language.`}
 
 Start by greeting the student warmly in ${lang.name}.
 `;
@@ -522,6 +524,19 @@ Start by greeting the student warmly in ${lang.name}.
 
         {/* Message list */}
         <div style={styles.messages}>
+
+          {/* Native language box */}
+          <div style={styles.nativeLangBox}>
+            <span>🌍 My native language (for translations)</span>
+            <input
+              style={styles.nativeLangInput}
+              value={nativeLang}
+              onChange={(e) => setNativeLang(e.target.value)}
+              placeholder="e.g. Spanish, Arabic, French..."
+              spellCheck={false}
+            />
+          </div>
+
           {messages.map((msg, i) => (
             msg.role === "system"
               ? <div key={i} style={styles.systemMsg}>{msg.content}</div>
@@ -661,4 +676,8 @@ const styles = {
   kbHint:      { fontSize: 10, color: "rgba(255,255,255,0.4)", textAlign: "center", padding: "2px 8px 6px", lineHeight: 1.5, borderBottom: "1px solid rgba(255,255,255,0.06)", marginBottom: 4 },
   kbGroupLabel:{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontStyle: "italic", minWidth: 10, textAlign: "right" },
   kbKeySpecial:{ background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.3)", fontSize: 12, minWidth: 26, padding: "0 6px" },
+
+  // ── Native language box ───────────────────────────────────
+  nativeLangBox:   { alignSelf: "center", width: "90%", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.05)", border: "1px dashed rgba(255,255,255,0.15)", borderRadius: 12, padding: "10px 16px" },
+  nativeLangInput: { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, color: "#fff", padding: "6px 14px", fontSize: 13, outline: "none", fontFamily: "inherit", textAlign: "center", width: "60%" },
 };
