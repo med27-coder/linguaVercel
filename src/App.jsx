@@ -681,8 +681,8 @@ const styles = {
   kbKeySpecial:{ background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.3)", fontSize: 12, minWidth: 26, padding: "0 6px" },
 
   // ── Native language bar ───────────────────────────────────
-  nativeLangBar:   { display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "5px 16px", background: "rgba(0,0,0,0.15)", borderBottom: "1px solid rgba(255,255,255,0.07)", flexShrink: 0 },
-  nativeLangLabel: { fontSize: 11, color: "rgba(255,255,255,0.4)", whiteSpace: "nowrap" },
-  nativeLangHint:  { fontSize: 10, color: "rgba(255,255,255,0.25)", whiteSpace: "nowrap", fontStyle: "italic" },
-  nativeLangInput: { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, color: "#fff", padding: "3px 10px", fontSize: 12, outline: "none", fontFamily: "inherit", textAlign: "center", width: 120 },
+  nativeLangBar:   { display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "6px 16px", background: "rgba(251,191,36,0.08)", borderBottom: "2px solid rgba(251,191,36,0.5)", flexShrink: 0 },
+  nativeLangLabel: { fontSize: 11, color: "#fbbf24", whiteSpace: "nowrap", fontWeight: 600 },
+  nativeLangHint:  { fontSize: 10, color: "rgba(251,191,36,0.5)", whiteSpace: "nowrap", fontStyle: "italic" },
+  nativeLangInput: { background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.4)", borderRadius: 8, color: "#fff", padding: "3px 10px", fontSize: 12, outline: "none", fontFamily: "inherit", textAlign: "center", width: 120 },
 };
