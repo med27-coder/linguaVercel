@@ -128,12 +128,21 @@ export default function App() {
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return alert("Speech recognition not supported in this browser.");
+    if (isListening) return;
     const recognition = new SpeechRecognition();
     recognition.lang = selectedLang?.srLang || "en-US";
     recognition.interimResults = false;
     recognition.onstart = () => setIsListening(true);
     recognition.onend = () => setIsListening(false);
-    recognition.onresult = (e) => { const transcript = e.results[0][0].transcript; setInput(transcript); setTimeout(() => handleSend(), 500); };
+    recognition.onresult = (e) => {
+      const transcript = e.results[0][0].transcript.trim();
+      if (!transcript || loading) return;
+      setInput("");
+      const userMessage = { role: "user", content: transcript };
+      const updatedMessages = [...messages, userMessage];
+      setMessages(updatedMessages);
+      sendToGemini(updatedMessages);
+    };
     recognition.start();
   };
 
@@ -196,10 +205,12 @@ Start by greeting the student warmly in ${lang.name}.
       const systemPrompt = buildSystemPrompt(selectedLang, level);
       const geminiMessages = isGreeting
         ? [{ role: "user", parts: [{ text: "Please greet me and start our conversation." }] }]
-        : history.map((m) => ({
-            role: m.role === "user" ? "user" : "model",
-            parts: [{ text: m.content }],
-          }));
+        : history
+            .filter((m) => m.role !== "system")
+            .map((m) => ({
+              role: m.role === "user" ? "user" : "model",
+              parts: [{ text: m.content }],
+            }));
 
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
@@ -218,11 +229,11 @@ Start by greeting the student warmly in ${lang.name}.
 
       if (reply.includes("💡 Correction:")) setCorrections((c) => c + 1);
 
-      const newMessages = isGreeting
-        ? [{ role: "assistant", content: reply }]
-        : [...history, { role: "assistant", content: reply }];
-
-      setMessages(newMessages);
+      if (isGreeting) {
+        setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+      } else {
+        setMessages([...history, { role: "assistant", content: reply }]);
+      }
 
       if (voiceEnabled) await speakWithElevenLabs(reply, selectedLang.voiceId);
     } catch (err) {
@@ -244,6 +255,7 @@ Start by greeting the student warmly in ${lang.name}.
         .split("🔊 Pronunciation:")[0]
         .split("💬 Try saying:")[0]
         .trim();
+      if (!cleanText) return;
       const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
         method: "POST",
         headers: {
@@ -262,7 +274,9 @@ Start by greeting the student warmly in ${lang.name}.
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      new Audio(url).play();
+      const audio = new Audio(url);
+      audio.onended = () => URL.revokeObjectURL(url);
+      audio.play();
     } catch (err) {
       console.error("ElevenLabs error:", err);
       setVoiceEnabled(false);
@@ -393,7 +407,7 @@ Start by greeting the student warmly in ${lang.name}.
             <span style={styles.topicBadge}>{topic.emoji} {topic.label}</span>
           </div>
           <div style={styles.stats}>
-            💬 {messages.length} &nbsp; ✏️ {corrections}
+            💬 {messages.filter((m) => m.role !== "system").length} &nbsp; ✏️ {corrections}
           </div>
         </div>
 
