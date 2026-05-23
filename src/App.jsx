@@ -83,7 +83,7 @@ Use simple vocabulary and short sentences only.`
 • [full sentence in ${lang.name}] — [English meaning]
 • [full sentence in ${lang.name}] — [English meaning]
 
-Do NOT include a pronunciation section. Mix simple and complex structures.`
+Do NOT include a pronunciation section unless the student explicitly asks for pronunciation of a word or phrase — in that case provide it on a line starting with "🔊 Pronunciation:" then resume normal format. Mix simple and complex structures.`
 
 : `Respond naturally in ${lang.name} only — no English translation, no pronunciation section, no suggested sentences. Speak to the student as you would a native speaker. If the student explicitly asks for pronunciation of a word or phrase, provide it on a line starting with "🔊 Pronunciation:" then resume normal conversation. Use natural, native-level language.`}
 
