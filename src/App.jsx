@@ -111,6 +111,11 @@ Start by greeting the student warmly in ${lang.name}.
   };
 
   const speakWithElevenLabs = async (text, voiceId) => {
+    if (!ELEVEN_KEY) {
+      setVoiceEnabled(false);
+      setMessages((prev) => [...prev, { role: "assistant", content: "⚠️ Voice disabled: ElevenLabs API key not configured." }]);
+      return;
+    }
     try {
       const cleanText = text.replace(/💡 Correction:.*$/gm, "").trim();
       const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
@@ -125,12 +130,17 @@ Start by greeting the student warmly in ${lang.name}.
           voice_settings: { stability: 0.5, similarity_boost: 0.75 },
         }),
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail?.message || `ElevenLabs error ${res.status}`);
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.play();
+      new Audio(url).play();
     } catch (err) {
       console.error("ElevenLabs error:", err);
+      setVoiceEnabled(false);
+      setMessages((prev) => [...prev, { role: "assistant", content: `⚠️ Voice error: ${err.message}. Voice disabled.` }]);
     }
   };
 
