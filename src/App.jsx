@@ -535,6 +535,7 @@ Start by greeting the student warmly in ${lang.name}.
             placeholder="English"
             spellCheck={false}
           />
+          <span style={styles.nativeLangHint}>— set once, remembered for this session</span>
         </div>
 
         {/* Message list */}
@@ -682,5 +683,6 @@ const styles = {
   // ── Native language bar ───────────────────────────────────
   nativeLangBar:   { display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "5px 16px", background: "rgba(0,0,0,0.15)", borderBottom: "1px solid rgba(255,255,255,0.07)", flexShrink: 0 },
   nativeLangLabel: { fontSize: 11, color: "rgba(255,255,255,0.4)", whiteSpace: "nowrap" },
+  nativeLangHint:  { fontSize: 10, color: "rgba(255,255,255,0.25)", whiteSpace: "nowrap", fontStyle: "italic" },
   nativeLangInput: { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, color: "#fff", padding: "3px 10px", fontSize: 12, outline: "none", fontFamily: "inherit", textAlign: "center", width: 120 },
 };
